@@ -1090,3 +1090,28 @@ Verified: the pty (tab 5, ^O R 10): the status = "L 1 C 4" (no RM);
 the ruler = "L--V-|---R|----|..." (the L at 1, the V at the cursor
 4, the stop at 6, the R at 10, the stop at 11...). make/gcccheck/
 wmake zero warnings; smoke 6/6.
+
+== 2026-11-21 - Session 29: TAB cap on whitespace-only lines + the ruler ends at R ==
+
+User requests (branch "tabcap"):
+1. On a whitespace-only line ("empty" incl. the auto-indented state)
+   with a right margin set: TAB jumps only to tab stops strictly
+   BEFORE the margin; at the last such stop, TAB is a no-op.
+2. The ruler ends at the R mark - nothing drawn beyond the right
+   margin (also resolves the ruler half of the tab/margin overshoot
+   discussion).
+
+Implementation:
+- funcs.c add_text's TAB branch: the whitespace-only-line test (the
+  walk from the line start over the blanks, jumping the gap, ending
+  at the line's newline), the cap = 1 + (rt_marg - 2) / tabdef *
+  tabdef (the last stop strictly before the margin), the no-op
+  (break) when txt_y >= cap. Non-empty lines: TAB unchanged.
+- display.c ruler_paint(): the paint loop's bound
+  "rt_marg == 0 || scr_ybeg + c <= rt_marg" - nothing beyond the R
+  mark; the doc block updated.
+
+Verified: the cap (tab 5, margin 10: TAB -> V at 6, TAB again = the
+no-op); the ruler with -s10 ends at the R (the replay showed
+exactly 10 ruler columns); ^O R 0 = the full-width ruler; the four
+gates + smoke 6/6.

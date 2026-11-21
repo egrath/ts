@@ -1820,6 +1820,34 @@ void add_text (int ch)
 		addtab:
 		if (gap_beg + 1 < gap_end)
 		{
+			int	cap;		/* The last tab stop before the margin */
+			char	*bp;		/* The whitespace-run walker */
+
+			/* On a whitespace-only line (the indent-typing
+			 * state) with a right margin set, TAB jumps only
+			 * to tab stops strictly before the margin - the
+			 * indent can never reach or cross it, and there
+			 * is always room for text after the last stop.
+			 * At the last such stop, TAB is a no-op. */
+			bp = start_line (gap_end);
+			while (bp <= txt_end && *bp != '\n' &&
+				(*bp == ' ' || *bp == '\t'))
+			{
+				bp++;
+				if (bp == gap_beg)
+				{
+					bp = gap_end;	/* Jump the gap */
+				}
+			}
+			if (rt_marg > 0 && bp <= txt_end && *bp == '\n' &&
+				txt_y < rt_marg)
+			{
+				cap = 1 + (rt_marg - 2) / tabdef * tabdef;
+				if (txt_y >= cap)
+				{
+					break;		/* Capped: no-op */
+				}
+			}
 			*++gap_beg = ch;
 			if (!insflag && (gap_end < txt_end) && (*gap_end != '\n'))
 			{

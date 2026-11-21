@@ -183,6 +183,17 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-21 — TAB capped on whitespace-only lines + the ruler ends
+  at the R mark: on a whitespace-only line (the indent-typing state)
+  with a right margin set, TAB jumps only to tab stops strictly
+  before the margin (cap = 1 + (rt_marg - 2) / tabdef * tabdef); at
+  the last such stop TAB is a no-op (nothing inserted) - the indent
+  can never reach or cross the margin, leaving room for text. The
+  ruler draws no tab stops past the R mark and ENDS at the R mark
+  (blank beyond - also blank when scrolled fully past the margin).
+  Together with the earlier discussion: the tab/margin overshoot
+  cannot arise from indent-typing any more; unbreakable words still
+  overflow by design.
 - 2026-11-21 — Margin marks in the ruler (WordStar 4 style): 'L' at
   the left margin, 'R' at the right margin (only when set). The
   left margin is now a variable (int lt_marg, from the #define

@@ -706,8 +706,12 @@ static void disp_page (int x_top, int x_bot)
  *     lands the cursor: columns tabdef + 1, 2 * tabdef + 1, ... (so
  *     with tab 8 the ruler starts with 8 dashes, then 7 between the
  *     bars - the bar can never be the first character of the ruler).
- *     Shows the VISIBLE columns (starting at scr_ybeg), so the tab
- *     stops stay at their true positions under horizontal scrolling.
+ *     Tab stops past the right margin are not drawn, and the ruler
+ *     ENDS at the R mark - nothing is drawn beyond it (the whole
+ *     ruler row is blank when the view is scrolled fully past the
+ *     margin). Shows the VISIBLE columns (starting at scr_ybeg), so
+ *     the tab stops stay at their true positions under horizontal
+ *     scrolling.
  * returns:
  *     Nothing.
  * parameters:
@@ -742,7 +746,9 @@ static void ruler_paint (void)
 
 	wmove (rulerwin, 0, 0);
 	wclrtoeol (rulerwin);
-	for (c = 0; c < COLS; c++)
+	/* The ruler ends at the R mark: with a right margin set, nothing
+	 * is drawn beyond it (WordStar style). */
+	for (c = 0; c < COLS && (rt_marg == 0 || scr_ybeg + c <= rt_marg); c++)
 	{
 		int	tc;				/* The text column shown here */
 		char ch;
