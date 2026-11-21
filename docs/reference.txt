@@ -10,7 +10,9 @@ style: dashes, a '|' at the first column AFTER every tab stop (so
 with tab 8 it starts with 8 dashes, then 7 between bars), an 'L' at
 the left margin, an 'R' at the right margin (when one is set) and a
 'V' at the cursor's column. The ruler ENDS at the R mark - nothing
-is drawn beyond the right margin. The ruler follows tab-width (^O T)
+is drawn beyond the right margin, except the V: the cursor
+indicator is always shown, alone on the blank stretch past the R
+mark when the cursor is beyond it. The ruler follows tab-width (^O T)
 and margin (^O R) changes and horizontal scrolling.
 
 Notation

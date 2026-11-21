@@ -709,7 +709,10 @@ static void disp_page (int x_top, int x_bot)
  *     Tab stops past the right margin are not drawn, and the ruler
  *     ENDS at the R mark - nothing is drawn beyond it (the whole
  *     ruler row is blank when the view is scrolled fully past the
- *     margin). Shows the VISIBLE columns (starting at scr_ybeg), so
+ *     margin) - EXCEPT the V: the cursor indicator is always shown
+ *     when the cursor is within the visible columns, alone on the
+ *     blank stretch past the R mark when the cursor is beyond it.
+ *     Shows the VISIBLE columns (starting at scr_ybeg), so
  *     the tab stops stay at their true positions under horizontal
  *     scrolling.
  * returns:
@@ -775,6 +778,16 @@ static void ruler_paint (void)
 			ch = '-';		/* Ruler fill */
 		}
 		waddch (rulerwin, (chtype) ch);
+	}
+	/* The V is the one character exempt from the extent: when the
+	 * cursor is past the R mark (an overflowed word, margin
+	 * release, loaded long lines), it is drawn alone on the blank
+	 * stretch - the user keeps a guide. */
+	if (rt_marg > 0 && txt_y > rt_marg &&
+		txt_y >= scr_ybeg && txt_y - scr_ybeg < COLS)
+	{
+		wmove (rulerwin, 0, txt_y - scr_ybeg);
+		waddch (rulerwin, (chtype) 'V');
 	}
 	wrefresh (rulerwin);
 }

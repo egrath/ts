@@ -192,6 +192,11 @@ cursor clamps at the marker start and nothing can be written behind it.
   can never reach or cross the margin, leaving room for text. The
   ruler draws no tab stops past the R mark and ENDS at the R mark
   (blank beyond - also blank when scrolled fully past the margin).
+  Later still: the V is exempt from the extent - the cursor
+  indicator is ALWAYS drawn when the cursor is within the visible
+  columns, alone on the blank stretch past the R mark when the
+  cursor is beyond it (an overflowed word must not cost the user
+  the guide).
   Together with the earlier discussion: the tab/margin overshoot
   cannot arise from indent-typing any more; unbreakable words still
   overflow by design.

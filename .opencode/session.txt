@@ -1160,3 +1160,18 @@ Docs sweep (all stale spots found and fixed):
   RETURN and ^N; the source map's display.c row gained
   ruler_paint.
 - README.md: checked, makes no feature claims - current.
+
+== 2026-11-21 - Session 30: the V is always drawn (exempt from the ruler extent) ==
+
+User request: with the ruler ending at the R mark, a cursor past
+the margin (overflowed word, ^O X margin release, loaded long
+lines) had no guide at all. Fix: the V is the one character exempt
+from the extent - ruler_paint() draws the marks/fill only up to the
+R mark (unchanged), then a post-loop step draws the V alone on the
+blank stretch when txt_y > rt_marg (and the cursor is within the
+visible columns). rt_marg = 0 unchanged.
+
+Verified: overflow (14 a's, margin 10) -> the ruler "L----|---R"
+plus a lone V at column 15; inside the margin -> "L--V-|---R"
+unchanged; the four gates + smoke 6/6. Docs: reference.txt screen
+paragraph, AGENTS.md decision entry, the ruler_paint doc block.
