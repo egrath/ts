@@ -194,6 +194,16 @@ cursor clamps at the marker start and nothing can be written behind it.
   Together with the earlier discussion: the tab/margin overshoot
   cannot arise from indent-typing any more; unbreakable words still
   overflow by design.
+  Later the same day the cap was GENERALIZED (the whitespace-only
+  scoping was the mistake): a TAB press never lands past the right
+  margin, on any line - with a margin set and the cursor at or left
+  of it (txt_y <= rt_marg), TAB lands only on a stop <= cap or is a
+  no-op; past the margin tabs behave normally (the overflow region's
+  escape hatch). ^P-typed literal tabs get the same cap. Loaded
+  files' tab bytes still display at their full stops (the rule
+  governs where a TAB press lands, not how bytes render). The
+  whitespace-only walk (and its gap-jump off-by-one) was deleted -
+  the cap needs no line-content test.
 - 2026-11-21 — Margin marks in the ruler (WordStar 4 style): 'L' at
   the left margin, 'R' at the right margin (only when set). The
   left margin is now a variable (int lt_marg, from the #define

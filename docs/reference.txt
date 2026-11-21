@@ -80,10 +80,11 @@ RETURN          Newline. Auto-indent: the new line starts at the same
                 the cursor stays at the split point (the end of the
                 line above)
 TAB             Tab; expands to spaces on screen, stored as one TAB.
-                On a whitespace-only line with a right margin set, TAB
-                jumps only to tab stops strictly before the margin
-                (at the last such stop, TAB does nothing) - the indent
-                can never reach or cross the margin
+                With a right margin set and the cursor at or left of
+                it, TAB jumps only to tab stops strictly before the
+                margin (at the last such stop, TAB does nothing) - a
+                TAB press never lands past the margin; past the
+                margin tabs behave normally
 ^P              Enter the NEXT key as a literal control code
                 Example: ^P M puts a real carriage return (0x0D)
                 into the text. ^@ (NUL) cannot be entered

@@ -1124,3 +1124,19 @@ check failed and TAB inserted normally (two tabs saved). Fixed;
 verified: two TABs save exactly 09 0a; the ruler shows L----V---R
 (V on the last stop before the margin, R last). All four gates
 green.
+
+Follow-up 2: the user reported the residual inconsistency - on a
+text line, TABs still crossed the margin (verified: "abc"+TAB+TAB
+saved two 09s, cursor at 11, and the V vanished from the ruler past
+the R mark). The whitespace-only scoping was the mistake; the cap
+is generalized now: with a margin set and the cursor at or left of
+it (txt_y <= rt_marg), a TAB press lands only on a stop <= cap or
+is a no-op; past the margin tabs behave normally. The whole
+whitespace-only walk (incl. the gap-jump off-by-one fix) was
+deleted - the cap needs no line-content test. ^P-typed literal
+tabs get the same cap (same branch). Verified matrix (tab 5,
+margin 10): abc+TAB+TAB = one 09; empty line = one 09; cursor ON
+the margin + TAB = no 09; 14 a's overflow + TAB = normal 09; no
+margin = uncapped. Ruler keeps V at 6. All four gates + smoke 6/6.
+(Process note: the first matrix run tested the stale binary - make
+must precede any pty verification.)

@@ -1785,8 +1785,13 @@ void repaint (void)
  *     The word wrap shares reform()'s break-at-space logic but only
  *     for the freshly typed character; when no space is found nothing
  *     wraps (nowrap). With no right margin (rt_marg = 0) the wrap
- *     never triggers. Control characters count as one column only
- *     when cntlflag is on - otherwise the cursor does not advance.
+ *     never triggers. With a right margin set and the cursor at or
+ *     left of it, a TAB press lands only on tab stops strictly
+ *     before the margin (at the last such stop, TAB is a no-op) -
+ *     a TAB press never lands past the margin; past the margin
+ *     tabs behave normally. Control characters count as one column
+ *     only when cntlflag is on - otherwise the cursor does not
+ *     advance.
  *     A NUL (^P ^@) is rejected: it would break find().
  * ####################################################################### */
 void add_text (int ch)
@@ -1821,26 +1826,15 @@ void add_text (int ch)
 		if (gap_beg + 1 < gap_end)
 		{
 			int	cap;		/* The last tab stop before the margin */
-			char	*bp;		/* The whitespace-run walker */
 
-			/* On a whitespace-only line (the indent-typing
-			 * state) with a right margin set, TAB jumps only
-			 * to tab stops strictly before the margin - the
-			 * indent can never reach or cross it, and there
-			 * is always room for text after the last stop.
-			 * At the last such stop, TAB is a no-op. */
-			bp = start_line (gap_end);
-			while (bp <= txt_end && *bp != '\n' &&
-				(*bp == ' ' || *bp == '\t'))
-			{
-				bp++;
-				if (bp == gap_beg + 1)
-				{
-					bp = gap_end;	/* Jump the gap */
-				}
-			}
-			if (rt_marg > 0 && bp <= txt_end && *bp == '\n' &&
-				txt_y < rt_marg)
+			/* With a right margin set and the cursor at or
+			 * left of it, TAB jumps only to tab stops
+			 * strictly before the margin - a TAB press can
+			 * never land past the margin (WordStar), and at
+			 * the last such stop TAB is a no-op. Past the
+			 * margin (the overflow region), tabs behave
+			 * normally; with no margin there is no cap. */
+			if (rt_marg > 0 && txt_y <= rt_marg)
 			{
 				cap = 1 + (rt_marg - 2) / tabdef * tabdef;
 				if (txt_y >= cap)
