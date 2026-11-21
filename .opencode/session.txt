@@ -1115,3 +1115,12 @@ Verified: the cap (tab 5, margin 10: TAB -> V at 6, TAB again = the
 no-op); the ruler with -s10 ends at the R (the replay showed
 exactly 10 ruler columns); ^O R 0 = the full-width ruler; the four
 gates + smoke 6/6.
+
+Follow-up (same day): the first cap version had the gap-jump one
+byte early (bp == gap_beg instead of bp == gap_beg + 1) - with the
+cursor right after the indent, *gap_beg (the last pre-cursor byte)
+was skipped and the walk read gap garbage, so the whitespace-only
+check failed and TAB inserted normally (two tabs saved). Fixed;
+verified: two TABs save exactly 09 0a; the ruler shows L----V---R
+(V on the last stop before the margin, R last). All four gates
+green.

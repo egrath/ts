@@ -1834,7 +1834,7 @@ void add_text (int ch)
 				(*bp == ' ' || *bp == '\t'))
 			{
 				bp++;
-				if (bp == gap_beg)
+				if (bp == gap_beg + 1)
 				{
 					bp = gap_end;	/* Jump the gap */
 				}
