@@ -119,8 +119,8 @@ Right margin (RM):
   for source code.
 - ^O R or -sn sets it to n columns (word wrap for typed text and ^B
   reformatting); 0 switches it off again.
-- The status line shows the setting: "L 12 C 40 RM 78", or "RM -"
-  when no margin is set.
+- The ruler shows the margin position as the R mark (the ruler ends
+  there); the numeric value is on the ^K I info screen.
 
 Block operations
 ----------------
@@ -167,7 +167,8 @@ Settings and screen
 ^O R    Set the right margin (0 = none - see above)
 ^O T    Set the hard TAB width (2..32)
 ^O L    Repaint the screen
-^K I    Info screen: version, file, cursor, memory usage, terminal
+^K I    Info screen: version, file, cursor, memory usage, terminal,
+        right margin, tab width
 
 Memory model: the working buffer is fixed for the session - a new
 file holds about 99,970 bytes, a loaded file its size plus 100,000.

@@ -1140,3 +1140,23 @@ the margin + TAB = no 09; 14 a's overflow + TAB = normal 09; no
 margin = uncapped. Ruler keeps V at 6. All four gates + smoke 6/6.
 (Process note: the first matrix run tested the stale binary - make
 must precede any pty verification.)
+
+== 2026-11-21 - tabcap merged; docs sweep ==
+
+Merge: tabcap fast-forwarded to master (b5b8798..2563776: the TAB
+cap + the ruler extent, the gap-jump fix, the generalization) and
+pushed.
+
+Docs sweep (all stale spots found and fixed):
+- reference.txt: the "status line shows RM" claim replaced (the
+  ruler's R mark shows the margin position, ^K I the numeric
+  value); the ^K I entry now lists right margin + tab width (both
+  verified on the info screen). Checked current: the screen
+  paragraph (L/R marks, the ruler ends at R), the TAB entry (the
+  general cap), ^O T (2..32 via ^O T vs 1..32 via -t - genuinely
+  different clamps), usage line.
+- AGENTS.md: "What this is" - the status line is L/C only (the RM
+  display removed), the ruler has the L/R marks, auto-indent on
+  RETURN and ^N; the source map's display.c row gained
+  ruler_paint.
+- README.md: checked, makes no feature claims - current.

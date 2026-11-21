@@ -12,8 +12,9 @@ old Unices (ULTRIX, AIX, SVR3/4). This fork modernizes it to build warning-free
 with modern compilers (macOS clang, Linux gcc) while keeping behavior identical.
 
 Already removed vs. the original: F-key mode, novice mode, environment-variable
-configuration, color support. Added: line/column/RM indicator in the status
-line, the tab ruler below it, auto-indent on RETURN, HOME/END line keys.
+configuration, color support. Added: line/column indicator in the status
+line, the tab ruler below it (with WordStar-style L/R margin marks),
+auto-indent on RETURN and ^N, HOME/END line keys.
 
 ## Source map
 
@@ -21,7 +22,7 @@ line, the tab ruler below it, auto-indent on RETURN, HOME/END line keys.
 |---|---|
 | `src/ts.c` | Global variable definitions, `main()`, `do_alloc()` (buffer mgmt), `edit_init()`, `edit_exit()` |
 | `src/data.c` | Text-buffer primitives over the gap: `start_line`, `next_line`, `new_line`, `column`, `text_move`, `line_y`, `move_x`, `move_y`, `move_ptr`, `strtoup`, `invert`, `undel`, `undel_save` |
-| `src/display.c` | All curses output: status/prompt windows, `dsp_line`/`disp_page`/`display()`, help screens (`do_help`), `xw_printw`, `prompt_st`/`prompt_key` input |
+| `src/display.c` | All curses output: status/prompt windows, the tab ruler (`ruler_paint`), `dsp_line`/`disp_page`/`display()`, help screens (`do_help`), `xw_printw`, `prompt_st`/`prompt_key` input |
 | `src/funcs.c` | Editor commands: find/replace, reform, save/load (`save`/`load`), block ops (`block_funcs`), `add_text`, deletions, `do_shell`, `ts_abort` (signal handler) |
 | `src/command.c` | Input dispatch: `key_scan` and the ^Q/^K/^O menus (`q_key`/`k_key`/`o_key`), SIGALRM trampolines for the timed help screens |
 | `src/ts.h` | Shared types, globals (`extern`), full C89 prototypes |
