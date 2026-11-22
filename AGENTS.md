@@ -207,8 +207,10 @@ cursor clamps at the marker start and nothing can be written behind it.
   that remain: the marker is undeletable (del_right refuses at
   txt_end), the newline directly before it is protected
   (del_right/reform), the cursor clamps at the marker start. A
-  loaded 0-byte file counts as "not loaded" (gets the "New file"
-  warning). Verified: the byte matrix (0/3/4/7/8-byte saves, CRLF),
+  loaded 0-byte file IS loaded: the "New file" warning (meaning
+  "nothing was read from disk") is suppressed for it - edit_init
+  tracks a loaded flag from load()'s return. Verified: the byte
+  matrix (0/3/4/7/8-byte saves, CRLF),
   the round-trips (0-byte, 1-byte, newline-less), ^G/backspace
   refusals, ^B on newline-less text, ^N/auto-indent, ASan-clean
   scripted session; smoke 2/3/4 gained a RETURN (their newline-

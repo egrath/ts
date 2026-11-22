@@ -1218,3 +1218,11 @@ edit_init now tracks a "loaded" flag (load()'s return > 0 - a
 warning-free with [EOF] on the first row and resaves 0 bytes; the
 nonexistent-name and no-arg starts keep the warning; the real-file
 path untouched. All four gates + smoke 7/7.
+
+== 2026-11-22 - emptybuf merged to master ==
+
+Fast-forward adf5770..f4fd6e3 (the truly-empty new file + the
+0-byte-file warning fix) and pushed. Docs sweep: the AGENTS.md
+decisions entry's "0-byte counts as not loaded" sentence replaced
+with the loaded-flag semantics; reference.txt and the core-
+structure paragraph already current.
