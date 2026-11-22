@@ -191,6 +191,15 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-22 — ^G may delete the newline before the [EOF] marker:
+  the doorstep protection was a leftover of the old "marker on its
+  own line" invariant, abandoned in the empty-buffer round (the
+  resulting state is byte-identical to typing without a trailing
+  RETURN, and backspace could already delete it - an asymmetry).
+  del_right() now refuses only at txt_end (the marker itself is
+  undeletable); reform() KEEPS its join protection - the reflow is
+  automatic and must not eat a trailing newline the user typed with
+  RETURN, while ^G is an explicit action.
 - 2026-11-22 — ^G refusal no longer leaves a phantom undo entry:
   key_scan's ^G did undel_save() BEFORE del_right(), so a refused
   ^G (end of text, or the newline before the [EOF] marker) left a
