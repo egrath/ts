@@ -1235,7 +1235,10 @@ int save (char *s_name, char *s_type)
  *     MODE_MACINTOSH, no CR -> MODE_UNIX. All endings are normalized
  *     to LF in the buffer; NUL bytes and high bits are stripped (the
  *     editor is 7-bit). On the first load of a session (and when no
- *     -d/-m/-u option was given) the detected mode becomes filemode.
+ *     -d/-m/-u option was given) the detected mode becomes filemode -
+ *     but only when the file actually contains line endings: a 0-byte
+ *     or terminator-less file keeps the current mode (the detection
+ *     has nothing to go on).
  * returns:
  *     The number of lines loaded (j); 0 when the file could not be
  *     opened; -1 when the file does not fit the gap (nothing kept).
@@ -1252,6 +1255,7 @@ int load (char *l_name)
 	int		c;
 	int		j;
 	int		i;
+	int		endings = 0;		/* Any '\r'/'\n' seen in the file */
 	enum filemodes mode = MODE_UNIX;
 	char	*old_beg;
 	char	inbuf[2048];
@@ -1273,6 +1277,10 @@ int load (char *l_name)
 			if (c == 0)				/* Remove NULLs */
 			{
 				continue;
+			}
+			if (c == '\n' || c == '\r')
+			{
+				endings = 1;		/* Something to detect */
 			}
 			if (gap_beg + 1 >= gap_end)
 			{
@@ -1317,7 +1325,10 @@ int load (char *l_name)
 		status_line ();
 		return (-1);
 	}
-	if (autofilemode)			/* Options override		*/
+	if (autofilemode && endings)	/* Options override; a file with
+					 * no line endings at all (0 bytes,
+					 * text without a terminator) keeps
+					 * the current mode */
 	{
 		filemode = mode;		/* ..else autodetect	*/
 	}

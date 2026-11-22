@@ -191,6 +191,18 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-22 — load() no longer misreads "no line endings" as Unix:
+  the ending detection applied its verdict unconditionally, so
+  loading a 0-byte or terminator-less file overwrote the platform
+  default - on DOS (default MSDOS) that made every subsequent save
+  write 0x0A without the CR (found in the user's DOS runtime pass:
+  open an empty file, type test + RETURN, save -> "test\n" instead
+  of "test\r\n"; with a fresh name or with -d it was correct, hence
+  "sometimes"). load() now tracks whether any '\r'/'\n' was actually
+  seen and only applies the detection then - a file with no endings
+  keeps the current mode. Files WITH endings are still detected and
+  preserved (the documented "loaded files keep their detected
+  endings" design; -d/^K F force a mode when wanted).
 - 2026-11-22 — The atomic save is UNIX-only: the "<name>.ts<pid>"
   temp name is not a legal FAT 8.3 filename - on DOS fopen() failed
   and every save reported "Can't write to file!" (found in the

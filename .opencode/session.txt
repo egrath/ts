@@ -1364,3 +1364,22 @@ the DOS save atomicity is in Known issues.
 Verified: the Watcom/clang/gcc-16 gates 0 warnings, smoke 7/7, the
 UNIX atomic path byte-exact with no temp leftovers. The DOS save
 itself awaits the user's hardware pass. NOT merged.
+
+== 2026-11-22 - Session 37: the vacuous mode detection fixed (branch "dosmode") ==
+
+The user's DOS pass: a file with one line + a newline saved as
+"test\n" (0x0A, no CR) without -d, while a char typed on line 2
+(with -d) saved correctly. Root cause: load()'s ending detection
+applied its verdict unconditionally - a 0-byte or terminator-less
+file (an empty file left by the earlier empty-save testing!) has
+nothing to detect, but the vacuous MODE_UNIX default overwrote the
+DOS MODE_MSDOS default; the subsequent saves wrote LF. Fix: load()
+tracks whether any '\r'/'\n' was actually seen and only applies the
+detection then; a file with no endings keeps the current mode.
+Files WITH endings are still detected and preserved (the documented
+design; -d/^K F force a mode).
+
+Verified: the four gates, smoke 7/7, ASan clean over the 0-byte
+load + edit + save path. The DOS confirmation (an empty file opened
+without -d, test + RETURN, save -> "test\r\n"; ^K I reports MSDOS)
+awaits the user's hardware pass. NOT merged.
