@@ -1383,3 +1383,10 @@ Verified: the four gates, smoke 7/7, ASan clean over the 0-byte
 load + edit + save path. The DOS confirmation (an empty file opened
 without -d, test + RETURN, save -> "test\r\n"; ^K I reports MSDOS)
 awaits the user's hardware pass. NOT merged.
+
+== 2026-11-22 - dossave/dosmode merged to master ==
+
+The user's DOS runtime pass confirmed both fixes (the save works on
+FAT, the mode detection keeps MSDOS for an empty file). Merge:
+fast-forward 77667a4..5adc13b (the UNIX-only atomic save + the
+vacuous mode-detection fix) and pushed.
