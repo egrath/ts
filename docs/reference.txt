@@ -182,7 +182,7 @@ memory!" (nothing is corrupted). Save and load the file again
 to the file on disk plus 100,000. ^K R must fit the existing free
 space. Saving is safe against disk-full: the text goes to a
 temporary file first and replaces the original only after the write
-succeeded.
+succeeded (UNIX; DOS writes to the destination directly).
 
 New files start empty: the [EOF] marker sits alone on the first
 row and an untouched save writes a 0-byte file. Text typed without

@@ -1350,3 +1350,17 @@ edge-hammering block session (0 findings), the four gates + smoke
 == 2026-11-22 - blockfix merged to master ==
 
 Fast-forward 3935a18..8450d83 (the block-marker clamps) and pushed.
+
+== 2026-11-22 - Session 36: DOS save fixed (branch "dossave") ==
+
+The user's DOS runtime pass found every save failing with "Can't
+write to file!": the atomic-save temp name "<name>.ts<pid>" is not
+a legal FAT 8.3 filename (two dots, a long extension) - fopen()
+failed before a byte was written. Fix: the temp+rename atomicity is
+#ifdef UNIX; DOS writes to the destination directly (the pre-review
+behavior). A FAT-safe temp name is noted as a possible future item;
+the DOS save atomicity is in Known issues.
+
+Verified: the Watcom/clang/gcc-16 gates 0 warnings, smoke 7/7, the
+UNIX atomic path byte-exact with no temp leftovers. The DOS save
+itself awaits the user's hardware pass. NOT merged.

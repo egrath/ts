@@ -1100,9 +1100,11 @@ void new_file (void)
  * notes:
  *     All file I/O goes through here (whole-text saves aim the block
  *     markers at the full text first). Overwrite saves ("wb") are
- *     ATOMIC: the text goes to "<name>.ts<pid>" first and is renamed
- *     over the destination only after a clean close - a disk-full
- *     mid-write leaves the original untouched. Appends write directly.
+ *     ATOMIC on UNIX: the text goes to "<name>.ts<pid>" first and is
+ *     renamed over the destination only after a clean close - a
+ *     disk-full mid-write leaves the original untouched. DOS writes
+ *     directly (the temp name is not a legal FAT 8.3 filename).
+ *     Appends write directly on every platform.
  *     Only 7-bit text: the buffer never holds bytes >= 0x80.
  * ####################################################################### */
 int save (char *s_name, char *s_type)
@@ -1112,8 +1114,10 @@ int save (char *s_name, char *s_type)
 	char	xbuf[2048];			/* Translated chunk (newlines expand) */
 	int		out;				/* Bytes in xbuf */
 	int		ioerr;
+#ifdef UNIX
 	int		atomic;				/* Temp file, then rename */
 	char	tmpname[TXTNAME_SIZE + 16];
+#endif
 
 	/* This should never happen: */
 	if (strlen (s_name) == 0)
@@ -1127,7 +1131,10 @@ int save (char *s_name, char *s_type)
 
 	/* Overwrite saves go to a temp file first: a disk-full or any
 	 * other write error then leaves the original untouched. Appends
-	 * cannot be made atomic this way and write directly. */
+	 * cannot be made atomic this way and write directly.
+	 * UNIX only: the "<name>.ts<pid>" temp name is not a legal FAT
+	 * 8.3 filename, so DOS writes to the destination directly. */
+#ifdef UNIX
 	atomic = (strcmp (s_type, "wb") == 0);
 	if (atomic && strlen (s_name) + 24 <= (int) sizeof (tmpname))
 	{
@@ -1139,6 +1146,9 @@ int save (char *s_name, char *s_type)
 		atomic = 0;
 		s_file = fopen (s_name, s_type);
 	}
+#else
+	s_file = fopen (s_name, s_type);
+#endif
 	if (s_file == (FILE *) NULL)
 	{
 		beep ();
@@ -1192,18 +1202,18 @@ int save (char *s_name, char *s_type)
 	{
 		beep ();
 		prompt_key ("Error writing file! ");
+#ifdef UNIX
 		if (atomic)
 		{
 			remove (tmpname);	/* The original is untouched */
 		}
+#endif
 		status_line ();	/* Restore */
 		return (0);
 	}
+#ifdef UNIX
 	if (atomic)
 	{
-#ifdef DOS
-		remove (s_name);	/* DOS rename refuses to replace */
-#endif
 		if (rename (tmpname, s_name) != 0)
 		{
 			remove (tmpname);
@@ -1213,6 +1223,7 @@ int save (char *s_name, char *s_type)
 			return (0);
 		}
 	}
+#endif
 	status_line ();	/* Restore */
 	return (1);
 }

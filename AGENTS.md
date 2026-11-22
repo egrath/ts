@@ -191,6 +191,14 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-22 — The atomic save is UNIX-only: the "<name>.ts<pid>"
+  temp name is not a legal FAT 8.3 filename - on DOS fopen() failed
+  and every save reported "Can't write to file!" (found in the
+  user's DOS runtime pass, the verification we had deferred). DOS
+  writes to the destination directly again (the pre-review
+  behavior); UNIX keeps the temp+rename atomicity. A FAT-safe temp
+  name (extension replaced by ".$$$", stem truncated to 8) is a
+  possible future item if DOS save protection is wanted.
 - 2026-11-22 — Block markers clamped into the user's text: the
   block range is [blk_beg..blk_end] inclusive and the state machine
   let the markers point at the buffer furniture - ^K B on the
@@ -562,6 +570,11 @@ cursor clamps at the marker start and nothing can be written behind it.
   guards it (screen-stream check — the saved file alone hid the bug).
 
 ## Known issues / notes (not yet fixed)
+
+- **DOS saves are not atomic**: the temp+rename protection is
+  UNIX-only (the FAT 8.3 filename rules reject the temp name - see
+  the decisions log). A disk-full mid-save on DOS can damage the
+  original; a FAT-safe temp name is a possible future item.
 
 - **ULTRIX build quirks** (compiles and links with gcc on real ULTRIX
   hardware): cursesX.h declares `wgetch`/`wmove`/etc. but NOT
