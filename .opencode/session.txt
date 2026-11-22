@@ -1346,3 +1346,7 @@ Verified: the reproduction (mark at the marker + copy/move +
 backspaces: no '[' in the text, no "[[EOF]" on screen), an ASan
 edge-hammering block session (0 findings), the four gates + smoke
 7/7. NOT merged - user tests first.
+
+== 2026-11-22 - blockfix merged to master ==
+
+Fast-forward 3935a18..8450d83 (the block-marker clamps) and pushed.
