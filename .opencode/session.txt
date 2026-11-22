@@ -1306,3 +1306,21 @@ the save; a refused ^G stays a silent no-op. Verified: the bug
 sequence (type+RETURN+^S+^G+^U) now saves 12 bytes ("hello world\n",
 was 13); a real ^G deletion + ^U still round-trips (11 bytes);
 the four gates + smoke 7/7.
+
+== 2026-11-22 - Session 34: ^G may delete the doorstep newline ==
+
+User request: ^G at the end of the last line should delete the
+newline and move [EOF] up. Agreed - the refusal was a leftover of
+the old "marker on its own line" invariant, abandoned in the
+empty-buffer round (the same state is reachable by typing without a
+RETURN), and backspace could ALREADY delete the doorstep newline
+(an asymmetry). del_right() now refuses only at txt_end (the marker
+itself undeletable); the ^G pre-check drops its doorstep condition;
+reform() KEEPS its join protection (the reflow is automatic and
+must not eat a trailing newline typed with RETURN - explicit
+actions may, the reflow may not). Docs: del_right's doc block,
+reference.txt ^G entry, the AGENTS.md core paragraph.
+Verified: test+RETURN+^E+^QD+^G = 4 bytes ("test", no newline),
+the display test[EOF] inline; ^U restores (5 bytes); ^G at the
+marker refused; reform keeps the trailing newline; the four gates
++ smoke 7/7.

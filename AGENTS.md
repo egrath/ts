@@ -47,8 +47,10 @@ A new file starts truly empty (no user text): the `[EOF]` marker sits alone
 on the first row and an untouched save writes 0 bytes. A file ends with a
 newline only when RETURN was typed at its end - the marker then trails the
 last line inline. The marker itself can never be deleted (`del_right()`
-refuses at `txt_end`), and the newline directly before it is protected:
-`del_right()` never deletes it and `reform()` never joins it away. Every
+refuses at `txt_end`), and `reform()` never joins the newline directly
+before it away - the reflow is automatic and must not eat a trailing
+newline the user typed with RETURN, while `^G` (an explicit action) may
+delete it. Every
 forward cursor scan is bounded by `txt_end` (`move_y()`, `line_y()`), so the
 cursor clamps at the marker start and nothing can be written behind it.
 

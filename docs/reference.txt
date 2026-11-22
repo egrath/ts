@@ -61,8 +61,10 @@ Deletion and undo
 Backspace or Del
                 Delete the character to the LEFT of the cursor
 ^G              Delete the character UNDER the cursor. The [EOF]
-                marker can never be deleted, and neither can the
-                newline directly before it
+                marker can never be deleted. ^G on the newline before
+                the marker joins the last line with the marker line -
+                the file then ends without a newline (the same as
+                typing text without a trailing RETURN)
 ^T              Delete the word to the right (stops at punctuation)
 ^Y              Delete the whole line the cursor is on
 ^U              Undo: restore the last deleted text. Repeat to go

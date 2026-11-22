@@ -288,27 +288,27 @@ void info_func (void)
  * purpose:
  *     Delete the character UNDER the cursor (the ^G target): grow the
  *     gap by one byte at gap_end, jumping any block marker out of the
- *     way. Refuses to delete the newline that terminates the text - the
- *     [EOF] marker must stay on its own line.
+ *     way. Refuses at txt_end - the [EOF] marker itself can never be
+ *     deleted. Deleting the newline directly before the marker joins
+ *     the last line with the marker line: the marker then trails the
+ *     line inline and the file ends without a newline (the same state
+ *     as typing text without a trailing RETURN).
  * returns:
- *     1 when a character was deleted, 0 at the end of the text or when
- *     the final newline was the target.
+ *     1 when a character was deleted, 0 at the end of the text (the
+ *     marker is the target).
  * parameters:
  *     None; the cursor is gap_end.
  * notes:
  *     Sets disp_mode: dtoeos when a newline was deleted (rest of the
  *     screen moves up), dtoeolhc otherwise (rest of the line).
+ *     reform() deliberately still refuses to join that last newline
+ *     away - the reflow is automatic and must not eat a trailing
+ *     newline the user typed with RETURN; ^G is an explicit action.
  * ####################################################################### */
 int del_right (void)
 {
 	if (gap_end < txt_end)		/* Can't delete past end of file */
 	{
-		/* Never delete the newline that terminates the text:
-		 * the [EOF] marker must stay on its own line. */
-		if (gap_end + 1 == txt_end && *gap_end == '\n')
-		{
-			return (0);
-		}
 		if (*gap_end == '\n')
 		{
 			disp_mode = dtoeos;
@@ -720,8 +720,12 @@ void reform (void)
 			{
 			case '\n':						/* Join lines */
 				text_move ();
-				/* Never join away the final newline of the text:
-				 * the [EOF] marker must stay on its own line. */
+				/* Never join away the final newline of the
+				 * text: it is the trailing newline the
+				 * user typed with RETURN, and the reflow
+				 * must not silently eat it. (^G MAY
+				 * delete it - that is an explicit
+				 * action.) */
 				if (gap_end + 1 == txt_end)
 				{
 					txt_y = column (gap_end);
