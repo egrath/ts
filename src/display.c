@@ -294,6 +294,10 @@ void status_line (void)
 	{
 		stat_print (COLS - 24, "INS", NULL, NULL);		/* INSert status */
 	}
+	else
+	{
+		stat_print (COLS - 24, "OVR", NULL, NULL);		/* OVeRwrite status */
+	}
 
 	if (helplines)		/* Don't show redundant msg */
 	{

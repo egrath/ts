@@ -236,7 +236,7 @@ void key_scan (void)
 		}
 		else
 		{
-			stat_print (COLS - 24, "   ", NULL, NULL);
+			stat_print (COLS - 24, "OVR", NULL, NULL);
 		}
 		break;
 

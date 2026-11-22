@@ -1252,3 +1252,15 @@ fixed on branch "audit":
   branch: 10001).
 - B5 ^Q Y checks gap_end < txt_end before dereferencing.
 Gates: clang/gcc-16/Watcom 0 warnings, smoke 7/7. NOT merged.
+
+== 2026-11-22 - emptybuf/audit merged; INS/OVR indicator ==
+
+Merge: the audit branch fast-forwarded to master
+(9936849..074f896) and pushed.
+
+The overwrite mode now shows "OVR" in the status line instead of
+blanking the indicator (the user request): key_scan's ^V case and
+status_line() both render INS for insert and OVR for overwrite -
+the indicator is always visible (INS is the default). reference.txt
+names the MR/INS/OVR indicators. Verified: the replay stream shows
+INS -> OVR -> INS across ^V toggles; the four gates + smoke 7/7.
