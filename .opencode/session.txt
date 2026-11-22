@@ -1226,3 +1226,29 @@ Fast-forward adf5770..f4fd6e3 (the truly-empty new file + the
 decisions entry's "0-byte counts as not loaded" sentence replaced
 with the loaded-flag semantics; reference.txt and the core-
 structure paragraph already current.
+
+== 2026-11-22 - Session 32: audit round (branch "audit") ==
+
+Full-tree audit (bad algorithms / leaks / performance). Findings
+fixed on branch "audit":
+- A1 undel_save: the node leaked when the text malloc failed after
+  the node malloc succeeded - freed now.
+- A2 edit_exit: the undo list is drained at exit (free-only walk;
+  undel() re-inserts, so a dedicated loop).
+- B1 text_move: the per-byte shift loop (4 marker checks/byte) ->
+  one memmove per direction + count_lf() (memchr newline count) +
+  jumpmark_fwd/jumpmark_bwd one-shot marker fixups. BUG FOUND IN
+  REVIEW OF MY FIRST DRAFT: the old backward loop is INCLUSIVE of
+  txt_ptr (gap_beg >= txt_ptr) - that inclusiveness is how ^S steps
+  one char; the first draft treated it as exclusive and broke the
+  cursor moves (smoke 1/7 caught it). Differential verification:
+  5 scripted sessions (moves+typing, big moves+reform, find/
+  replace-all, block ops+undo, deletions+undo) byte-IDENTICAL
+  between master and the branch; ASan clean.
+- B2 load/save: 2K-chunk fread/fwrite with the per-byte
+  translation/state machine kept; ferror/fclose checks unchanged.
+- B4 END/^Q D: line_y(INT_MAX) instead of the 9999 cap - a
+  10000-char line's END lands at the true end (master: byte 9999;
+  branch: 10001).
+- B5 ^Q Y checks gap_end < txt_end before dereferencing.
+Gates: clang/gcc-16/Watcom 0 warnings, smoke 7/7. NOT merged.

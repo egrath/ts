@@ -227,14 +227,99 @@ int column (char *line)
 	return (i);
 }
 /* #######################################################################
+ * static int count_lf (char *from, long n)
+ * purpose:
+ *     Count the newlines in the byte range [from, from + n). Used by
+ *     text_move() to keep the cursor's line number in sync across a
+ *     batch gap move.
+ * returns:
+ *     The number of '\n' bytes in the range.
+ * parameters:
+ *     char *from: first byte of the range.
+ *     long n: the range length in bytes.
+ * notes:
+ *     Uses memchr() so the scan runs at library speed.
+ * ####################################################################### */
+static int count_lf (char *from, long n)
+{
+	int		count;
+	char	*end;
+	char	*p;
+
+	count = 0;
+	end = from + n;
+	p = from;
+	while (p < end)
+	{
+		p = memchr (p, '\n', (size_t) (end - p));
+		if (p == NULL)
+		{
+			break;
+		}
+		count++;
+		p++;
+	}
+	return (count);
+}
+/* #######################################################################
+ * static char * jumpmark_fwd (char *mark, long n, char *gbeg, char *gend)
+ * purpose:
+ *     Batch form of text_move()'s forward block-marker jump: a marker
+ *     that the gap's top edge passes (mark in [gend - n, gend)) follows
+ *     its byte to the destination side of the gap, exactly as the old
+ *     byte-at-a-time loop did ("blk = gap_beg + 1" at that step).
+ * returns:
+ *     The marker's new position (unchanged when outside the moved span).
+ * parameters:
+ *     char *mark: the block marker to fix.
+ *     long n: the number of bytes moved.
+ *     char *gbeg: gap_beg AFTER the move.
+ *     char *gend: gap_end AFTER the move.
+ * notes:
+ *     Static helper of text_move(); see jumpmark_bwd() for the mirror.
+ * ####################################################################### */
+static char * jumpmark_fwd (char *mark, long n, char *gbeg, char *gend)
+{
+	if (mark >= gend - n && mark < gend)
+	{
+		mark = gbeg + 1 + (mark - gend);
+	}
+	return (mark);
+}
+/* #######################################################################
+ * static char * jumpmark_bwd (char *mark, long n, char *gbeg, char *gend)
+ * purpose:
+ *     Batch form of text_move()'s backward block-marker jump: a marker
+ *     that the gap's bottom edge passes (mark in (gbeg, gbeg + n])
+ *     follows its byte to the destination side of the gap, exactly as
+ *     the old byte-at-a-time loop did ("blk = gap_end - 1" at that step).
+ * returns:
+ *     The marker's new position (unchanged when outside the moved span).
+ * parameters:
+ *     char *mark: the block marker to fix.
+ *     long n: the number of bytes moved.
+ *     char *gbeg: gap_beg AFTER the move.
+ *     char *gend: gap_end AFTER the move.
+ * notes:
+ *     Static helper of text_move(); see jumpmark_fwd() for the mirror.
+ * ####################################################################### */
+static char * jumpmark_bwd (char *mark, long n, char *gbeg, char *gend)
+{
+	if (mark > gbeg && mark <= gbeg + n)
+	{
+		mark = gend + (mark - gbeg) - 1;
+	}
+	return (mark);
+}
+/* #######################################################################
  * int text_move (void)
  * purpose:
- *     Relocate the gap to txt_ptr: shift bytes one at a time from the
- *     far side of the gap to the near side, so that everything from
+ *     Relocate the gap to txt_ptr: shift the bytes between the gap and
+ *     txt_ptr to the far side of the gap so that everything from
  *     txt_ptr on sits after the gap. This is how the cursor "moves"
- *     in the gap buffer. While shifting, any block marker the gap
- *     would swallow (blk_beg/blk_end/tblk_beg/tblk_end) is jumped to
- *     the other side of the gap.
+ *     in the gap buffer. Block markers (blk_beg/blk_end/tblk_beg/
+ *     tblk_end) that the gap would swallow are jumped to the other
+ *     side of the gap, following their byte.
  * returns:
  *     The change in line number caused by the move: +1 for each
  *     newline shifted into the text before the gap, -1 for each
@@ -243,54 +328,50 @@ int column (char *line)
  *     None; txt_ptr (set by the caller) selects the destination.
  * notes:
  *     Bounded by txt_beg/txt_end - the gap can never be moved onto
- *     the [EOF] marker or before the start of the text.
+ *     the [EOF] marker or before the start of the text. The shift is
+ *     one memmove() per direction with a memchr()-based newline count
+ *     (count_lf) and the markers fixed up afterwards (jumpmark_fwd/
+ *     jumpmark_bwd) - byte-for-byte identical results to the old
+ *     per-byte loop, at library speed.
  * ####################################################################### */
 int text_move (void)
 {
-	int delx;
-	delx = 0;
+	int delx = 0;
+	long n;
 
 	/* Forward move */
-	while ((gap_end < txt_ptr) && (gap_end < txt_end))
+	n = (txt_ptr < txt_end ? txt_ptr : txt_end) - gap_end;
+	if (n > 0)
 	{
-		if (blk_end == gap_end)		/* Jump gap if necessary */
-		{
-			blk_end = gap_beg + 1;
-		}
-		if (blk_beg == gap_end)
-		{
-			blk_beg = gap_beg + 1;
-		}
-		if (tblk_end == gap_end)
-		{
-			tblk_end = gap_beg + 1;
-		}
-		if (tblk_beg == gap_end)
-		{
-			tblk_beg = gap_beg + 1;
-		}
-		*++gap_beg  = *gap_end++;
-		if (*gap_beg == '\n')
-		{
-			delx++;
-		}
+		memmove (gap_beg + 1, gap_end, (size_t) n);
+		delx = count_lf (gap_beg + 1, n);
+		gap_beg += n;
+		gap_end += n;
+		blk_end  = jumpmark_fwd (blk_end,  n, gap_beg, gap_end);
+		blk_beg  = jumpmark_fwd (blk_beg,  n, gap_beg, gap_end);
+		tblk_end = jumpmark_fwd (tblk_end, n, gap_beg, gap_end);
+		tblk_beg = jumpmark_fwd (tblk_beg, n, gap_beg, gap_end);
 	}
 
-	/* Backward move */
-	while ((gap_beg >= txt_ptr) && (gap_beg > txt_beg))
+	/* Backward move - INCLUSIVE of txt_ptr: the loop of the old
+	 * byte-at-a-time version copied bytes while gap_beg >= txt_ptr
+	 * (and > txt_beg), so a txt_ptr equal to gap_beg still moves one
+	 * byte - that is how ^S steps the cursor left. */
 	{
-		if (blk_end == gap_beg)		/* Jump gap if necessary */
+		char *target;
+
+		target = (txt_ptr > txt_beg) ? txt_ptr - 1 : txt_beg;
+		n = gap_beg - target;
+		if (n > 0)
 		{
-			blk_end = gap_end - 1;
-		}
-		if (blk_beg == gap_beg)
-		{
-			blk_beg = gap_end - 1;
-		}
-		*--gap_end = *gap_beg--;
-		if (*gap_end == '\n')
-		{
-			delx--;
+			memmove (gap_end - n, gap_beg - n + 1, (size_t) n);
+			delx = -count_lf (gap_end - n, n);
+			gap_end -= n;
+			gap_beg = target;
+			blk_end  = jumpmark_bwd (blk_end,  n, gap_beg, gap_end);
+			blk_beg  = jumpmark_bwd (blk_beg,  n, gap_beg, gap_end);
+			tblk_end = jumpmark_bwd (tblk_end, n, gap_beg, gap_end);
+			tblk_beg = jumpmark_bwd (tblk_beg, n, gap_beg, gap_end);
 		}
 	}
 	return (delx);	/* Return change to line location */
@@ -707,6 +788,7 @@ int undel_save (char *txt_start, unsigned txt_size,
 	}
 	else
 	{
+		free (nodeptr);		/* The text malloc failed; don't leak the node */
 		beep ();
 		c = toupper (prompt_key ("Can't save text; delete anyway (Y/N)? N\b"));
 		if (c == 'Y')

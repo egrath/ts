@@ -114,9 +114,22 @@ struct undelnode *undelptr;
  * parameters:
  *     int exparm: the process exit status (0 = ok, 1 = error,
  *     3 = terminal too small).
+ * notes:
+ *     Frees any undo entries left on the stack before exiting.
  * ###################################################################### */
 void edit_exit (int exparm)
 {
+	struct undelnode *nodeptr;
+
+	/* Free any undo entries left (undel() would re-insert the text;
+	 * at exit we only release the memory). */
+	while (undelptr != NULL)
+	{
+		nodeptr = undelptr;
+		undelptr = undelptr->previous;
+		free (nodeptr->text);
+		free (nodeptr);
+	}
 	endwin ();
 	printf ("\n");
 	exit (exparm);

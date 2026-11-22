@@ -95,7 +95,7 @@ void key_scan (void)
 		break;
 
 	case KEY_END:					/* End = end of line (^Q D) */
-		txt_y = line_y (9999);
+		txt_y = line_y (INT_MAX);	/* No cap: lines can be very long */
 		break;
 
 	/* --------- SCROLLING --------- */
@@ -457,7 +457,7 @@ void q_key (void)
 
 	case CNTRL_D:			/* To end of line */
 	case KEY_RIGHT:
-		txt_y = line_y (9999);	/* end of line */
+		txt_y = line_y (INT_MAX);	/* No cap: lines can be very long */
 		break;
 
 	case CNTRL_I:			/* Seek line # */
@@ -467,7 +467,7 @@ void q_key (void)
 	case CNTRL_Y:			/* Delete to end of line */
 	case KEY_DC:
 		temp_ptr = gap_end;
-		while (*gap_end != '\n' && gap_end < txt_end)
+		while (gap_end < txt_end && *gap_end != '\n')
 		{
 			gap_end++;	/* leave \n there */
 		}

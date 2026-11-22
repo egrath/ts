@@ -189,6 +189,20 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-22 — Audit round (branch "audit"): text_move() rewritten
+  from the per-byte shift loop to one memmove() per direction with a
+  memchr()-based newline count (count_lf) and one-shot block-marker
+  fixups (jumpmark_fwd/jumpmark_bwd) - byte-identical results
+  (differential sessions vs master: cursor moves, block ops with
+  marker jumps, reform, find/replace, deletions+undo all identical;
+  the backward move is INCLUSIVE of txt_ptr - that inclusiveness is
+  how ^S steps one char). load()/save() now read/write in 2K chunks
+  with in-memory translation instead of fgetc/fputc per byte.
+  undel_save() no longer leaks the node when the text malloc fails;
+  edit_exit() frees leftover undo entries (a free-only walk - undel()
+  would re-insert). END/^Q D use INT_MAX instead of a 9999-column
+  cap (a 10000-char line's END now lands at the true end); ^Q Y's
+  scan checks the txt_end bound before dereferencing.
 - 2026-11-22 — New files start truly empty: edit_init() no longer
   prepends a newline to a new buffer (the "*--gap_end = '\n'"
   branch). The user-visible blank line 1 WAS that byte; a new file

@@ -1095,6 +1095,8 @@ int save (char *s_name, char *s_type)
 {
 	FILE	*s_file;
 	char	*ptr;
+	char	xbuf[2048];			/* Translated chunk (newlines expand) */
+	int		out;				/* Bytes in xbuf */
 
 	/* This should never happen: */
 	if (strlen (s_name) == 0)
@@ -1115,22 +1117,23 @@ int save (char *s_name, char *s_type)
 		return (0);
 	}
 	ptr = blk_beg;
+	out = 0;
 	while (ptr <= blk_end)
 	{
 		if (*ptr == '\n')				/* May have to xlate */
 		{
 			if (filemode != MODE_UNIX)
 			{
-				fputc ('\r', s_file);
+				xbuf[out++] = '\r';
 			}
 			if (filemode != MODE_MACINTOSH)	/* \r for MACINTOSH,			*/
 			{
-				fputc ('\n', s_file);	/* \n for Unix, \r\n for MSDOS	*/
+				xbuf[out++] = '\n';		/* \n for Unix, \r\n for MSDOS	*/
 			}
 		}
 		else
 		{
-			fputc (*ptr, s_file);
+			xbuf[out++] = *ptr;
 		}
 		if (ptr == gap_beg)
 		{
@@ -1140,6 +1143,15 @@ int save (char *s_name, char *s_type)
 		{
 			ptr++;
 		}
+		if (out >= (int) sizeof (xbuf) - 2)	/* Flush; a byte expands to 2 */
+		{
+			fwrite (xbuf, 1, (size_t) out, s_file);
+			out = 0;
+		}
+	}
+	if (out > 0)
+	{
+		fwrite (xbuf, 1, (size_t) out, s_file);
 	}
 	if (ferror (s_file) != 0 || fclose (s_file) != 0)
 	{
@@ -1173,10 +1185,13 @@ int save (char *s_name, char *s_type)
 int load (char *l_name)
 {
 	FILE	*l_file;
-	int	c;
-	int	j;
+	int		c;
+	int		j;
+	int		i;
 	enum filemodes mode = MODE_UNIX;
-	char *old_beg;
+	char	*old_beg;
+	char	inbuf[2048];
+	size_t	got;
 
 	if ((l_file = fopen (l_name, "rb")) == (FILE *) NULL)
 	{
@@ -1186,42 +1201,43 @@ int load (char *l_name)
 	status (0, "TextStar loading \"%s\"...", l_name, NULL);
 	j = 1;
 	old_beg = gap_beg;
-	while ((c = fgetc (l_file)) != EOF)
+	while ((got = fread (inbuf, 1, sizeof (inbuf), l_file)) > 0)
 	{
-		if (gap_beg + 1 >= gap_end)
+		for (i = 0; i < (int) got; i++)
 		{
-			beep ();
-			prompt_key ("File too big ");
-			gap_beg = old_beg;
-			fclose (l_file);
-			status_line ();
-			return (-1);
-		}
-		else
-		{
-			c &= 0x7F;	/* strip high bits */
-			if (c)		/* Remove NULLs */
+			c = inbuf[i] & 0x7F;	/* strip high bits */
+			if (c == 0)				/* Remove NULLs */
 			{
-				*(gap_beg + 1) = c;		/* do_alloc() sets initial gap_beg to \n */
-				if (*gap_beg == '\r')	/* Previous was \r */
-				{
-					*gap_beg = '\n';	/* Xlate \r to \n and \r\n to \n\n */
-					if (c == '\n')		/* Hit a \r\n */
-					{
-						mode = MODE_MSDOS;
-						gap_beg--;		/* Avoid \n\n */
-					}
-					else				/* Hit text\rtext */
-					{
-						mode = MODE_MACINTOSH;
-					}
-				}
-				if (*gap_beg == '\n')
-				{
-					j++;
-				}
-				gap_beg++;
+				continue;
 			}
+			if (gap_beg + 1 >= gap_end)
+			{
+				beep ();
+				prompt_key ("File too big ");
+				gap_beg = old_beg;
+				fclose (l_file);
+				status_line ();
+				return (-1);
+			}
+			*(gap_beg + 1) = c;		/* do_alloc() sets initial gap_beg to \n */
+			if (*gap_beg == '\r')	/* Previous was \r */
+			{
+				*gap_beg = '\n';	/* Xlate \r to \n and \r\n to \n\n */
+				if (c == '\n')		/* Hit a \r\n */
+				{
+					mode = MODE_MSDOS;
+					gap_beg--;		/* Avoid \n\n */
+				}
+				else				/* Hit text\rtext */
+				{
+					mode = MODE_MACINTOSH;
+				}
+			}
+			if (*gap_beg == '\n')
+			{
+				j++;
+			}
+			gap_beg++;
 		}
 	}
 	if (*gap_beg == '\r')
