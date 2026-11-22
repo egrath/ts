@@ -254,6 +254,16 @@ void key_scan (void)
 		break;
 
 	case CNTRL_G:			/* Delete character under cursor */
+		/* Refuse BEFORE saving for undo: a refused ^G (end of
+		 * text, or the newline before the [EOF] marker) must
+		 * not leave a phantom undo entry - the next ^U would
+		 * insert the never-deleted character at the cursor.
+		 * The conditions mirror del_right()'s. */
+		if (gap_end >= txt_end ||
+			(gap_end + 1 == txt_end && *gap_end == '\n'))
+		{
+			break;	/* Silent no-op, as del_right() always did */
+		}
 		if (!undel_save (gap_end, 1, FORWARD))
 		{
 			break;

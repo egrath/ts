@@ -1290,3 +1290,19 @@ restructure; do_alloc negative/overflow guards; atomic saves
 Verified: the four gates, smoke 7/7, ASan clean over the
 find-to-the-end and atomic-save paths, no temp leftovers, the
 resave-replace path byte-exact. NOT merged - user tests first.
+
+== 2026-11-22 - review merged; ^U phantom-entry fix ==
+
+Merge: the review branch fast-forwarded to master
+(b63e0bf..187699c) and pushed.
+
+The ^U phantom-entry bug root-caused and fixed: key_scan's ^G did
+undel_save() BEFORE del_right() - a refused ^G (end of text or the
+newline before the [EOF] marker) left a phantom undo entry, and the
+next ^U "restored" the never-deleted character at the cursor (the
+extra-newline effect seen in the empty-buffer bisection). The fix:
+the refusal conditions (mirroring del_right()) are checked before
+the save; a refused ^G stays a silent no-op. Verified: the bug
+sequence (type+RETURN+^S+^G+^U) now saves 12 bytes ("hello world\n",
+was 13); a real ^G deletion + ^U still round-trips (11 bytes);
+the four gates + smoke 7/7.
