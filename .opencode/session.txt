@@ -1209,3 +1209,12 @@ Found on the way (PRE-EXISTING on master, NOT this branch):
 newline (both trees: 13 bytes) - separate bug report to the user.
 
 All four gates + smoke 7/7. NOT merged - user tests first.
+
+Follow-up: the user noticed a loaded 0-byte file got the "New file"
+warning (the gap_beg == txt_beg test cannot see a 0-byte load).
+edit_init now tracks a "loaded" flag (load()'s return > 0 - a
+0-byte read counts, a fopen failure does not): the warning means
+"nothing was read from disk". Verified: the 0-byte file opens
+warning-free with [EOF] on the first row and resaves 0 bytes; the
+nonexistent-name and no-arg starts keep the warning; the real-file
+path untouched. All four gates + smoke 7/7.

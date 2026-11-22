@@ -211,14 +211,17 @@ static int do_alloc (long allocsize)
  *     new buffer.
  * notes:
  *     On load failure the file name is dropped and the session
- *     continues as a new file. A loaded 0-byte file counts as "not
- *     loaded" here (gap_beg stays at txt_beg) and gets the "New
- *     file" warning. Leaves disp_mode = dpage so the first
+ *     continues as a new file. The "New file" warning means
+ *     "nothing was read from disk": it is suppressed for a loaded
+ *     0-byte file (the file exists - the buffer honestly mirrors
+ *     it). Leaves disp_mode = dpage so the first
  *     display() in main() repaints the whole screen.
  * ###################################################################### */
 void edit_init (char *v_name)
 {
 	struct stat filestat;
+	int loaded = 0;			/* The file was opened and read */
+	int j;				/* load()'s return */
 
 	mod = FALSE;
 	while (undel());		/* Free buffers and set pointer to NULL */
@@ -253,9 +256,14 @@ void edit_init (char *v_name)
 				if (do_alloc (filestat.st_size))
 				{
 					/* Yes, attempt load */
-					if (load (txtname) == -1)	/* Load fails */
+					j = load (txtname);
+					if (j == -1)	/* Load fails */
 					{
 						strcpy (txtname, "");
+					}
+					else if (j > 0)	/* Read (0 bytes counts) */
+					{
+						loaded = 1;
 					}
 				}
 				else	/* Not enough memory */
@@ -268,7 +276,7 @@ void edit_init (char *v_name)
 	}
 	status_line ();
 	disp_mode = dpage;	/* Display 1st page of text */
-	if (gap_beg == txt_beg)		/* Nothing loaded, NEW file */
+	if (gap_beg == txt_beg && !loaded)	/* Nothing read, NEW file */
 	{
 		display ();				/* Show 1st screen */
 		warning ("New file ");	/* Warn user */
