@@ -29,7 +29,7 @@ TERM=xterm expect -c "
 	set timeout 15
 	spawn $TS $T/2.txt
 	sleep 1
-	send \"hello world\"
+	send \"hello world\\r\"
 	sleep 1
 	send \"\\013s\"
 	sleep 1
@@ -45,7 +45,7 @@ TERM=xterm expect -c "
 	set timeout 15
 	spawn $TS -d $T/3.txt
 	sleep 1
-	send \"hi\"
+	send \"hi\\r\"
 	sleep 1
 	send \"\\013s\"
 	sleep 1
@@ -72,7 +72,7 @@ TERM=xterm expect -c "
 	send \"\\013q\"
 	expect { eof {} timeout { exit 1 } }
 " > /dev/null 2>&1
-[ "$(hex $T/4.txt)" = "68656c6c6f20776f726c640a" ] \
+[ "$(hex $T/4.txt)" = "68656c6c6f20776f726c64" ] \
 	&& { echo "ok   - delete and undo"; PASS=$((PASS+1)); } \
 	|| { echo "FAIL - delete and undo"; FAIL=$((FAIL+1)); }
 
@@ -91,7 +91,7 @@ TERM=xterm expect -c "
 	send \"\\013q\"
 	expect { eof {} timeout { exit 1 } }
 " > /dev/null 2>&1
-[ -f "$T/5.txt" ] && [ "$(hex $T/5.txt)" = "0a" ] \
+[ -f "$T/5.txt" ] && [ "$(hex $T/5.txt)" = "" ] \
 	&& { echo "ok   - F1 ignored in filename prompt"; PASS=$((PASS+1)); } \
 	|| { echo "FAIL - F1 ignored in filename prompt"; FAIL=$((FAIL+1)); }
 
@@ -121,6 +121,23 @@ TERM=xterm expect -c "
 [ "$(hex $T/6.txt)" = "6162630a4158" ] && ! grep -q '\[\[' "$T/6.log" \
 	&& { echo "ok   - ^Q D clamps at the [EOF] marker"; PASS=$((PASS+1)); } \
 	|| { echo "FAIL - ^Q D clamps at the [EOF] marker"; FAIL=$((FAIL+1)); }
+
+# 7: new file: no implicit trailing newline - typed text without a
+#    RETURN saves without one (the empty buffer saves 0 bytes, test 5)
+TERM=xterm expect -c "
+	set timeout 15
+	spawn $TS $T/7.txt
+	sleep 1
+	send \"abc\"
+	sleep 1
+	send \"\\013s\"
+	sleep 1
+	send \"\\013q\"
+	expect { eof {} timeout { exit 1 } }
+" > /dev/null 2>&1
+[ "$(hex $T/7.txt)" = "616263" ] \
+	&& { echo "ok   - no implicit trailing newline"; PASS=$((PASS+1)); } \
+	|| { echo "FAIL - no implicit trailing newline"; FAIL=$((FAIL+1)); }
 
 rm -rf "$T"
 echo "smoke tests: $PASS passed, $FAIL failed"

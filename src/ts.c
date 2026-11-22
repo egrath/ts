@@ -127,9 +127,10 @@ void edit_exit (int exparm)
  *     (Re-)allocate the text buffer with room for allocsize bytes of
  *     file plus EXTRAMEM of working space, and lay out its fixed
  *     furniture: from the top of the buffer, the terminating NUL,
- *     LINES-1 padding newlines and the "[EOF]" marker; txt_beg gets
- *     an opening newline. The gap initially spans the whole free
- *     area, so the cursor starts on the "[EOF]" marker.
+ *     LINES-1 padding newlines and the "[EOF]" marker; txt_beg holds
+ *     a reserved SENTINEL newline that is never part of the user's
+ *     text (save_fname() skips it). The gap initially spans the whole
+ *     free area, so the cursor starts on the "[EOF]" marker.
  * returns:
  *     1 on success. 0 if the size does not fit an unsigned (80286
  *     truncation guard) or malloc fails - in both cases the old
@@ -200,15 +201,19 @@ static int do_alloc (long allocsize)
  *     Prepare a fresh editing session: reset the undo list, block
  *     markers and cursor, allocate the empty buffer, and - if a file
  *     name was given - stat the file and load it into a right-sized
- *     buffer. A new file gets one newline created and a "New file"
- *     warning; a loaded file has its text moved to the start of the
- *     working area.
+ *     buffer. A new file starts TRULY EMPTY: no bytes of user text,
+ *     so the [EOF] marker alone sits on the first row and saving an
+ *     untouched new file writes 0 bytes. A file ends with a newline
+ *     only when RETURN was typed at its end. A loaded file has its
+ *     text moved to the start of the working area.
  * parameters:
  *     char *v_name: the file to edit, or NULLCHARPTR for an unnamed
  *     new buffer.
  * notes:
  *     On load failure the file name is dropped and the session
- *     continues as a new file. Leaves disp_mode = dpage so the first
+ *     continues as a new file. A loaded 0-byte file counts as "not
+ *     loaded" here (gap_beg stays at txt_beg) and gets the "New
+ *     file" warning. Leaves disp_mode = dpage so the first
  *     display() in main() repaints the whole screen.
  * ###################################################################### */
 void edit_init (char *v_name)
@@ -265,7 +270,6 @@ void edit_init (char *v_name)
 	disp_mode = dpage;	/* Display 1st page of text */
 	if (gap_beg == txt_beg)		/* Nothing loaded, NEW file */
 	{
-		*--gap_end = '\n';		/* Add a newline */
 		display ();				/* Show 1st screen */
 		warning ("New file ");	/* Warn user */
 		warnflag = 1;			/* Flag; see input routines */

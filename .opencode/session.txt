@@ -1175,3 +1175,37 @@ Verified: overflow (14 a's, margin 10) -> the ruler "L----|---R"
 plus a lone V at column 15; inside the margin -> "L--V-|---R"
 unchanged; the four gates + smoke 6/6. Docs: reference.txt screen
 paragraph, AGENTS.md decision entry, the ruler_paint doc block.
+
+== 2026-11-22 - Session 31: new files start truly empty (branch "emptybuf") ==
+
+User request: a new file showed a blank line 1 ([EOF] on edit row
+1); the user wanted [EOF] on the FIRST row (like the state reachable
+via Down+Backspace, which saves 0 bytes). Model archaeology
+(save_fname's phony-block bounds: blk_beg = txt_beg + 1) showed:
+the do_alloc '\n' at txt_beg is a SENTINEL (never saved), and the
+blank line was edit_init's "*--gap_end = '\n'" prepend - the only
+fabricated byte in the whole editor (load() never fabricates;
+newline-less files round-trip byte-perfect, proven).
+
+Change: the prepend deleted - a new buffer = sentinel + marker.
+- New file: [EOF] alone on edit row 0, L 1 C 1; untouched save =
+  0 bytes; ^G at the marker start refused (del_right's
+  gap_end < txt_end); backspace at init refused (gap_beg > txt_beg
+  is false).
+- Byte matrix: abc = 3 bytes (no newline); abc+RET = "abc\n";
+  abc RET def = 7; +RET = 8; -d CRLF = "hi\r\n"; RETURN at init =
+  "\n" (1 byte, round-trips); 0-byte and newline-less loads
+  round-trip byte-perfect; ^B on newline-less text benign; ^N and
+  the auto-indent work; ASan-clean scripted session.
+- Convention change (user-approved): a file ends with a newline
+  only when RETURN was typed at its end; the marker trails the
+  last line inline until then. smoke 2/3 gained RETURN (their
+  translation coverage kept), 4 reverted to no-RETURN (a true
+  delete+undo cycle now), 5 expects the 0-byte save, new 7 pins
+  "no implicit trailing newline".
+
+Found on the way (PRE-EXISTING on master, NOT this branch):
+^U after a RETURN split with a refused ^G inserts an extra
+newline (both trees: 13 bytes) - separate bug report to the user.
+
+All four gates + smoke 7/7. NOT merged - user tests first.

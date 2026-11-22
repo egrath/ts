@@ -60,9 +60,9 @@ Deletion and undo
 -----------------
 Backspace or Del
                 Delete the character to the LEFT of the cursor
-^G              Delete the character UNDER the cursor. The final
-                newline of the text cannot be deleted - the [EOF]
-                marker always stays on its own line
+^G              Delete the character UNDER the cursor. The [EOF]
+                marker can never be deleted, and neither can the
+                newline directly before it
 ^T              Delete the word to the right (stops at punctuation)
 ^Y              Delete the whole line the cursor is on
 ^U              Undo: restore the last deleted text. Repeat to go
@@ -179,6 +179,12 @@ memory!" (nothing is corrupted). Save and load the file again
 (^K S, ^K L) to continue with fresh space: the buffer is then sized
 to the file on disk plus 100,000. ^K R must fit the existing free
 space.
+
+New files start empty: the [EOF] marker sits alone on the first
+row and an untouched save writes a 0-byte file. Text typed without
+a trailing RETURN saves without a final newline - the [EOF]
+marker then trails the last line inline; press RETURN to terminate
+the last line.
 
 Help
 ----

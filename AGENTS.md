@@ -37,13 +37,18 @@ Object files and the executable are built into `build/` (UNIX) and
 ### Core data structure: gap buffer
 
 Text lives in one malloc'd area as two segments with the **gap** between them
-(`gap_beg`/`gap_end`); the cursor sits in the gap. Inserts shrink the gap,
-deletions grow it, `text_move()` relocates it. Block markers (`blk_beg`/`blk_end`
+(`gap_beg`/`gap_end`); the cursor sits in the gap. Block markers (`blk_beg`/`blk_end`
 and the `t*` temporaries) must "jump the gap" when the gap moves past them.
-`txt_beg`/`txt_end` bound the buffer; the buffer always ends with an `[EOF]`
+`txt_beg`/`txt_end` bound the buffer; the buffer ends with an `[EOF]`
 marker and trailing newlines so all of the text can be treated as a string.
-The final newline of the text is protected: `del_right()`/`reform()` never
-delete or join it away — the `[EOF]` marker must stay on its own line. Every
+`txt_beg` holds a reserved SENTINEL newline that is never part of the user's
+text (`save_fname()` saves from `txt_beg + 1`); backward scans stop on it.
+A new file starts truly empty (no user text): the `[EOF]` marker sits alone
+on the first row and an untouched save writes 0 bytes. A file ends with a
+newline only when RETURN was typed at its end - the marker then trails the
+last line inline. The marker itself can never be deleted (`del_right()`
+refuses at `txt_end`), and the newline directly before it is protected:
+`del_right()` never deletes it and `reform()` never joins it away. Every
 forward cursor scan is bounded by `txt_end` (`move_y()`, `line_y()`), so the
 cursor clamps at the marker start and nothing can be written behind it.
 
@@ -184,6 +189,31 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-22 — New files start truly empty: edit_init() no longer
+  prepends a newline to a new buffer (the "*--gap_end = '\n'"
+  branch). The user-visible blank line 1 WAS that byte; a new file
+  now shows the [EOF] marker alone on the first edit row and an
+  untouched save writes 0 bytes (the save range is empty by
+  save_fname()'s phony-block bounds). Consequence (accepted): a
+  file ends with a newline only when RETURN was typed at its end -
+  typed text without a trailing RETURN saves without one, and the
+  marker trails the last line INLINE ("abc[EOF]"); pressing
+  RETURN puts the marker back on its own row. This is consistent
+  with the rest of the editor: load() never fabricates newlines
+  (newline-less files round-trip byte-perfect) and the marker-line
+  path always behaved that way. NOT part of the text: the sentinel
+  newline at txt_beg (do_alloc) - save_fname() skips it
+  (blk_beg = txt_beg + 1), backward scans stop on it. Invariants
+  that remain: the marker is undeletable (del_right refuses at
+  txt_end), the newline directly before it is protected
+  (del_right/reform), the cursor clamps at the marker start. A
+  loaded 0-byte file counts as "not loaded" (gets the "New file"
+  warning). Verified: the byte matrix (0/3/4/7/8-byte saves, CRLF),
+  the round-trips (0-byte, 1-byte, newline-less), ^G/backspace
+  refusals, ^B on newline-less text, ^N/auto-indent, ASan-clean
+  scripted session; smoke 2/3/4 gained a RETURN (their newline-
+  translation coverage), smoke 5 expects the 0-byte save, new
+  smoke 7 pins "no implicit trailing newline".
 - 2026-11-21 — TAB capped on whitespace-only lines + the ruler ends
   at the R mark: on a whitespace-only line (the indent-typing state)
   with a right margin set, TAB jumps only to tab stops strictly
