@@ -704,12 +704,14 @@ char invert (char c)
  *     calls walk further back in time - the undo stack is a doubly
  *     linked list (undelptr points at the newest entry).
  * returns:
- *     1 if text was restored, 0 when the stack is empty.
+ *     1 if text was restored; 0 when the stack is empty OR when the
+ *     insertion failed (no gap space) - a failed entry is kept for a
+ *     retry instead of being destroyed with its text.
  * parameters:
  *     None.
  * notes:
- *     edit_init() drains the stack with while (undel()); before every
- *     new session.
+ *     edit_init() and edit_exit() release the stack WITHOUT
+ *     re-inserting (undo_clear()).
  * ####################################################################### */
 int undel (void)
 {
@@ -717,8 +719,14 @@ int undel (void)
 
 	if (undelptr != NULL)
 	{
-		text_ins (undelptr->text, undelptr->text + undelptr->size,
-			undelptr->direction);
+		if (!text_ins (undelptr->text,
+			undelptr->text + undelptr->size,
+			undelptr->direction))
+		{
+			/* The gap has no room: keep the entry so the
+			 * text is not lost - free space and retry. */
+			return (0);
+		}
 		/* Free previously allocated memory */
 		nodeptr	= undelptr;
 		undelptr = undelptr->previous;
@@ -729,6 +737,33 @@ int undel (void)
 	else
 	{
 		return (0);
+	}
+}
+/* #######################################################################
+ * void undo_clear (void)
+ * purpose:
+ *     Discard the whole undo stack WITHOUT re-inserting the saved
+ *     text: free every node's text buffer and the node itself. Used
+ *     at session end/start (edit_init/edit_exit) - undel() would
+ *     replay the deletions into a buffer that is about to be
+ *     discarded or rebuilt.
+ * returns:
+ *     Nothing.
+ * parameters:
+ *     None.
+ * notes:
+ *     Sets undelptr to NULL.
+ * ####################################################################### */
+void undo_clear (void)
+{
+	struct undelnode *nodeptr;
+
+	while (undelptr != NULL)
+	{
+		nodeptr = undelptr;
+		undelptr = undelptr->previous;
+		free (nodeptr->text);
+		free (nodeptr);
 	}
 }
 /* #######################################################################

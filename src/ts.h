@@ -290,6 +290,7 @@ extern int move_y (enum mvdir direction, enum mvmode mode);
 extern void move_ptr (void);
 extern char * strtoup (char *str);
 extern char invert (char c);
+extern void undo_clear (void);
 extern int undel (void);
 extern int undel_save (char *txt_start, unsigned txt_size,
 	enum directions undel_direction);

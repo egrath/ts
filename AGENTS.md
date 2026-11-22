@@ -189,6 +189,42 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-22 — External-review round (branch "review"): fixes from
+  an independent source review, triaged against our own audit.
+  - undel() keeps its undo entry when text_ins() fails (no gap
+    space) instead of destroying it - the text is no longer lost;
+    undo_clear() added (a free-only drain) and used by edit_init()
+    and edit_exit() (the old "while (undel());" replayed the
+    deletions into a buffer about to be rebuilt).
+  - save(): fclose() is called unconditionally (the old
+    "ferror(...) || fclose(...)" short-circuit leaked the FILE* on
+    every write error), and overwrite saves are ATOMIC: the text
+    goes to "<name>.ts<pid>" and is renamed over the destination
+    only after a clean close (DOS: remove() first, its rename
+    refuses to replace) - a disk-full mid-write leaves the original
+    untouched. Appends write directly.
+  - find(): candidates bounded by the user's text (txt_end -
+    txt_ptr >= s_strlen) - the old unchecked strncpy could read
+    ~30 bytes past the allocation on a not-found search reaching
+    the tail, and matches could hit the [EOF] marker/padding.
+  - load(): ferror() checked after the read loop; a read error
+    keeps nothing of the partial load ("Error reading file!").
+  - do_shell(): the command build checks the REAL needed length
+    (the old check forgot " -c " and the quotes - a 6-byte
+    worst-case overflow), double quotes in the command are
+    escaped (shell_escape), and the ">" import is stripped from
+    respptr before the build (the old commands[] surgery broke on
+    escaped tails).
+  - do_alloc(): rejects a negative/overflowing allocsize before
+    the arithmetic (a corrupt stat size).
+  Deferred by decision: the vsprintf hardening (a documented C89
+  trade-off, no unbounded external input reaches the formats), the
+  signal-handler redesign (the 1995 crash-save philosophy, the gap
+  pointers are sanity-checked), the TSsaved name race (theoretical).
+  Verified: the differential sessions vs master stay byte-identical
+  for the loaded-file paths, the ASan pass over the find-to-the-end
+  OOB path + the atomic save + the exit drain (0 findings), the
+  atomic saves leave no temp files, the four gates + smoke 7/7.
 - 2026-11-22 — Audit round (branch "audit"): text_move() rewritten
   from the per-byte shift loop to one memmove() per direction with a
   memchr()-based newline count (count_lf) and one-shot block-marker

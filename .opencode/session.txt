@@ -1264,3 +1264,29 @@ status_line() both render INS for insert and OVR for overwrite -
 the indicator is always visible (INS is the default). reference.txt
 names the MR/INS/OVR indicators. Verified: the replay stream shows
 INS -> OVR -> INS across ^V toggles; the four gates + smoke 7/7.
+
+== 2026-11-22 - Session 33: external-review round (branch "review") ==
+
+The user brought an independent source review; triaged it against
+our audit. Real catches we had missed: undel() destroyed the undo
+entry when text_ins() failed (data loss), save()'s
+"ferror(...) || fclose(...)" short-circuit leaked the FILE* on
+write errors, find()'s strncpy could read ~30 bytes past the
+allocation on a not-found search near the tail (my ASan pass never
+reached it), and save() truncated the original before writing
+(no disk-full protection). Overstated/wrong in the review: the
+vsprintf severity (documented, bounded callers), the gap-spanning-
+match claim (the search never crosses the gap), the TSsaved race
+priority, and the subtract-100 loop (the documented 80286 guard).
+
+Implemented on branch "review" (see the AGENTS.md decisions entry):
+undo entry kept on text_ins failure; undo_clear() (free-only)
+shared by edit_init/edit_exit; unconditional fclose; find() bounded
+by the user's text; load() ferror with a no-partial-keep rollback;
+do_shell exact-length checks + quote escaping + the import flag
+restructure; do_alloc negative/overflow guards; atomic saves
+("<name>.ts<pid>" + rename, DOS remove() first).
+
+Verified: the four gates, smoke 7/7, ASan clean over the
+find-to-the-end and atomic-save paths, no temp leftovers, the
+resave-replace path byte-exact. NOT merged - user tests first.

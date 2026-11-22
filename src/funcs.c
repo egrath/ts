@@ -434,8 +434,11 @@ int save_fname (void)
  *     from sptr.
  * notes:
  *     The copy-and-compare keeps the user's text untouched (an older
- *     version uppercased the search string in place). Works across the
- *     gap since txt_ptr walks byte-wise.
+ *     version uppercased the search string in place). Candidates are
+ *     bounded by the user's text: a match can neither reach into the
+ *     [EOF] marker nor read past the buffer (an older version read
+ *     s_strlen bytes unchecked near txt_end). The search runs forward
+ *     from the cursor and never crosses the gap.
  * ####################################################################### */
 int find (void)
 {
@@ -450,7 +453,11 @@ int find (void)
 
 	while (txt_ptr <= txt_end)
 	{
-		if (toupper (*txt_ptr) == toupper (*sptr)) /* 1st chars match */
+		/* The candidate must fit in the user's text: a copy near
+		 * txt_end would read the [EOF] marker, the padding and -
+		 * past them - memory that is not ours. */
+		if (txt_end - txt_ptr >= s_strlen &&
+			toupper (*txt_ptr) == toupper (*sptr)) /* 1st chars match */
 		{
 			/* Copy user's text to work buffer,		*/
 			/*  length of search string or null,	*/
@@ -1088,8 +1095,11 @@ void new_file (void)
  *     binary modes so DOS does not double-translate CRLF).
  * notes:
  *     All file I/O goes through here (whole-text saves aim the block
- *     markers at the full text first). Only 7-bit text: the buffer
- *     never holds bytes >= 0x80.
+ *     markers at the full text first). Overwrite saves ("wb") are
+ *     ATOMIC: the text goes to "<name>.ts<pid>" first and is renamed
+ *     over the destination only after a clean close - a disk-full
+ *     mid-write leaves the original untouched. Appends write directly.
+ *     Only 7-bit text: the buffer never holds bytes >= 0x80.
  * ####################################################################### */
 int save (char *s_name, char *s_type)
 {
@@ -1097,6 +1107,9 @@ int save (char *s_name, char *s_type)
 	char	*ptr;
 	char	xbuf[2048];			/* Translated chunk (newlines expand) */
 	int		out;				/* Bytes in xbuf */
+	int		ioerr;
+	int		atomic;				/* Temp file, then rename */
+	char	tmpname[TXTNAME_SIZE + 16];
 
 	/* This should never happen: */
 	if (strlen (s_name) == 0)
@@ -1108,7 +1121,20 @@ int save (char *s_name, char *s_type)
 
 	status (0, "TextStar writing \"%s\"...", s_name, NULL);
 
-	s_file = fopen (s_name, s_type);
+	/* Overwrite saves go to a temp file first: a disk-full or any
+	 * other write error then leaves the original untouched. Appends
+	 * cannot be made atomic this way and write directly. */
+	atomic = (strcmp (s_type, "wb") == 0);
+	if (atomic && strlen (s_name) + 24 <= (int) sizeof (tmpname))
+	{
+		sprintf (tmpname, "%s.ts%ld", s_name, (long) getpid ());
+		s_file = fopen (tmpname, s_type);
+	}
+	else
+	{
+		atomic = 0;
+		s_file = fopen (s_name, s_type);
+	}
 	if (s_file == (FILE *) NULL)
 	{
 		beep ();
@@ -1153,12 +1179,35 @@ int save (char *s_name, char *s_type)
 	{
 		fwrite (xbuf, 1, (size_t) out, s_file);
 	}
-	if (ferror (s_file) != 0 || fclose (s_file) != 0)
+	ioerr = ferror (s_file) != 0;
+	if (fclose (s_file) != 0)		/* Always close - also on error */
+	{
+		ioerr = 1;
+	}
+	if (ioerr)
 	{
 		beep ();
 		prompt_key ("Error writing file! ");
+		if (atomic)
+		{
+			remove (tmpname);	/* The original is untouched */
+		}
 		status_line ();	/* Restore */
 		return (0);
+	}
+	if (atomic)
+	{
+#ifdef DOS
+		remove (s_name);	/* DOS rename refuses to replace */
+#endif
+		if (rename (tmpname, s_name) != 0)
+		{
+			remove (tmpname);
+			beep ();
+			prompt_key ("Error replacing file! ");
+			status_line ();
+			return (0);
+		}
 	}
 	status_line ();	/* Restore */
 	return (1);
@@ -1243,6 +1292,15 @@ int load (char *l_name)
 	if (*gap_beg == '\r')
 	{
 		*gap_beg = '\n';
+	}
+	if (ferror (l_file))			/* Read error, not clean EOF */
+	{
+		beep ();
+		prompt_key ("Error reading file! ");
+		gap_beg = old_beg;			/* Keep nothing of a partial read */
+		fclose (l_file);
+		status_line ();
+		return (-1);
 	}
 	if (autofilemode)			/* Options override		*/
 	{
@@ -2066,6 +2124,48 @@ int text_ins (char *ins_beg, char *ins_end, enum directions direction)
 	disp_mode = dpage;						/* Redraw page afterwards */
 	return (1);
 }
+/* #######################################################################
+ * static int shell_escape (char *dst, int dstsize, char *src)
+ * purpose:
+ *     Copy src to dst, escaping double quotes with backslashes, so the
+ *     result survives being embedded inside "quotes" when do_shell()
+ *     builds its "shell -c command" string.
+ * returns:
+ *     The number of bytes written (without the NUL), or -1 when src
+ *     does not fit dstsize (dst is then left untouched).
+ * parameters:
+ *     char *dst: output buffer.
+ *     int dstsize: its capacity, including room for the terminator.
+ *     char *src: the user's command.
+ * notes:
+ *     Static helper of do_shell(). $ and ` are deliberately NOT
+ *     escaped - the user is expected to want their shell expansion.
+ * ####################################################################### */
+static int shell_escape (char *dst, int dstsize, char *src)
+{
+	int	need;
+	char	*p;
+
+	need = 0;
+	for (p = src; *p != '\0'; p++)
+	{
+		need += (*p == '"') ? 2 : 1;
+	}
+	if (need >= dstsize)
+	{
+		return (-1);
+	}
+	for (p = src; *p != '\0'; p++)
+	{
+		if (*p == '"')
+		{
+			*dst++ = '\\';
+		}
+		*dst++ = *p;
+	}
+	*dst = '\0';
+	return (need);
+}
 /* -----------------------------------------------
  * Execute shell command(s)
  * NOTES: - Imported (">") text will terminate at main text buffer overflow.
@@ -2092,11 +2192,11 @@ int text_ins (char *ins_beg, char *ins_end, enum directions direction)
 void do_shell (void)
 {
 	int		result;
-	int		tempsize;
 	char	commands[256];
 #ifdef UNIX
 	char	pipebuf[1024];
 	FILE	*fileptr;
+	int		importflag;
 #endif
 	char	*usershell;
 
@@ -2111,10 +2211,9 @@ void do_shell (void)
 		usershell = "";
 	}
 
-	/* Buffer space for user command */
-	tempsize = 256 - strlen (usershell) - 1;
-
-	if (tempsize < respsiz)
+	/* Buffer space check: the shell name must leave room for the
+	 * command build (" -c \"" + quotes + terminator). */
+	if (strlen (usershell) + 8 > sizeof (commands))
 	{
 		prompt_key ("$SHELL variable too long ");
 		return;
@@ -2138,12 +2237,35 @@ void do_shell (void)
 		return;		/* Abort */
 	}
 
+#ifdef UNIX
+	/* If the last character is ">", import the command's output: */
+	importflag = 0;
+	if (strlen (respptr) > 0 &&
+		respptr[strlen (respptr) - 1] == '>')
+	{
+		importflag = 1;
+		respptr[strlen (respptr) - 1] = '\0';	/* Drop the ">" */
+	}
+#endif
+
 	/* If $SHELL defined, use it; */
 	/*  otherwise, pass command line to "sh": */
 	if (strlen (usershell) && strlen (respptr))
 	{
-		/* Have $SHELL & response; need \"s for shell input, below */
-		sprintf (commands, "%s -c \"%s\"", usershell, respptr);
+		/* Have $SHELL & response: build
+		 * usershell -c "response" (quotes escaped). */
+		if ((int) (strlen (usershell) + 2 * strlen (respptr) + 8)
+			> (int) sizeof (commands))
+		{
+			prompt_key ("Command too long ");
+			return;
+		}
+		strcpy (commands, usershell);
+		strcat (commands, " -c \"");
+		shell_escape (commands + strlen (commands),
+			(int) sizeof (commands) - (int) strlen (commands) - 2,
+			respptr);
+		strcat (commands, "\"");
 	}
 	else if (strlen (usershell))
 	{
@@ -2153,7 +2275,11 @@ void do_shell (void)
 	else if (strlen (respptr))
 	{
 		/* Have response only */
-		sprintf (commands, "%s", respptr);
+		if (shell_escape (commands, (int) sizeof (commands), respptr) < 0)
+		{
+			prompt_key ("Command too long ");
+			return;
+		}
 	}
 	else
 	{
@@ -2172,11 +2298,8 @@ void do_shell (void)
 
 	/* If last character is ">" ... */
 #ifdef UNIX
-	if (strlen (respptr) > 0 &&
-		respptr[strlen (respptr) - 1] == '>')
+	if (importflag)
 	{
-		commands[strlen (commands) - 2] = '"';	/* Remove ">" */
-		commands[strlen (commands) - 1] = '\0';
 		if ((fileptr = (FILE *) popen (commands, "r")) != NULL)
 		{
 			while ((fgets (pipebuf, 1023, fileptr)) != NULL)

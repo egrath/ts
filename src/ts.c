@@ -119,17 +119,9 @@ struct undelnode *undelptr;
  * ###################################################################### */
 void edit_exit (int exparm)
 {
-	struct undelnode *nodeptr;
-
 	/* Free any undo entries left (undel() would re-insert the text;
 	 * at exit we only release the memory). */
-	while (undelptr != NULL)
-	{
-		nodeptr = undelptr;
-		undelptr = undelptr->previous;
-		free (nodeptr->text);
-		free (nodeptr);
-	}
+	undo_clear ();
 	endwin ();
 	printf ("\n");
 	exit (exparm);
@@ -166,7 +158,15 @@ static int do_alloc (long allocsize)
 	char *newbuf;
 
 	/* Set up working memory */
+	if (allocsize < 0)					/* A negative (corrupt) size */
+	{
+		return (0);
+	}
 	allocwork = allocsize + EXTRAMEM;	/* Add buffer space */
+	if (allocwork < allocsize)			/* Overflowed the long */
+	{
+		return (0);
+	}
 
 	mallarg = allocwork;			/* Convert to unsigned for malloc() */
 
@@ -237,7 +237,7 @@ void edit_init (char *v_name)
 	int j;				/* load()'s return */
 
 	mod = FALSE;
-	while (undel());		/* Free buffers and set pointer to NULL */
+	undo_clear ();			/* Free buffers and set pointer to NULL */
 	blk_beg = blk_end = NULL;
 
 	/* Initialize the display variables for screen and cursor */
