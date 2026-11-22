@@ -1381,6 +1381,41 @@ void mar_rel (void)
 	}
 }
 /* #######################################################################
+ * static int blk_clamp (void)
+ * purpose:
+ *     Clamp the block markers into the user's text before a block
+ *     operation: the sentinel newline at txt_beg and the [EOF] marker
+ *     at txt_end are buffer furniture and never block content. An
+ *     empty or inverted range after clamping is rejected.
+ * returns:
+ *     1 when the range is usable, 0 when it is empty (beeped).
+ * parameters:
+ *     None; reads and fixes blk_beg/blk_end.
+ * notes:
+ *     Static helper of block_funcs(). The markers can point at the
+ *     furniture because ^K B remembers the raw cursor position - a
+ *     cursor on the [EOF] line would mark the marker's own byte, and
+ *     copying that byte into the text is what duplicated the marker.
+ * ####################################################################### */
+static int blk_clamp (void)
+{
+	if (blk_beg < txt_beg + 1)		/* The sentinel is not text */
+	{
+		blk_beg = txt_beg + 1;
+	}
+	if (blk_end > txt_end - 1)		/* Neither is the [EOF] marker */
+	{
+		blk_end = txt_end - 1;
+	}
+	if (blk_beg > blk_end)
+	{
+		beep ();
+		prompt_key ("Block error ");
+		return (0);
+	}
+	return (1);
+}
+/* #######################################################################
  * void block_funcs (int funcno)
  * purpose:
  *     The ^K block operations dispatcher: 1 = begin mark at cursor,
@@ -1406,13 +1441,21 @@ void block_funcs (int funcno)
 	switch (funcno)
 	{
 	case 1:						/* Begin block */
+		/* The mark lies in the user's text: a cursor on the
+		 * [EOF] line marks the last text byte - the marker
+		 * itself is never block content. */
+		blk_beg = (gap_end < txt_end) ? gap_end : txt_end - 1;
+		if (blk_beg < txt_beg + 1)
+		{
+			blk_beg = txt_beg + 1;
+		}
 		if (blk_end > gap_end)	/* Block ends at/after cursor */
 		{
-			blk_beg = gap_end;
+			;					/* Keep the old end */
 		}
 		else
 		{
-			blk_beg = blk_end = gap_end;
+			blk_end = blk_beg;	/* A one-byte block at the mark */
 		}
 		disp_mode = dpage;
 		break;
@@ -1437,6 +1480,10 @@ void block_funcs (int funcno)
 		{
 			break;
 		}
+		if (!blk_clamp ())				/* Clamp into the user's text */
+		{
+			break;						/* Empty after clamping */
+		}
 		tblk_end = gap_end - 1;		/* Prepare to move block end (case 4) */
 		if (!text_ins (blk_beg, blk_end + 1, FORWARD))
 		{
@@ -1454,6 +1501,10 @@ void block_funcs (int funcno)
 		if (blk_err (1))				/* Not marked */
 		{
 			break;
+		}
+		if (!blk_clamp ())				/* Clamp into the user's text */
+		{
+			break;						/* Empty after clamping */
 		}
 		if (blk_beg > gap_end)		/* Preserve cursor location */
 		{

@@ -191,6 +191,22 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-22 — Block markers clamped into the user's text: the
+  block range is [blk_beg..blk_end] inclusive and the state machine
+  let the markers point at the buffer furniture - ^K B on the
+  [EOF] line marked the marker's own byte (the copy then inserted a
+  '[': the "[EOF] duplicated" the user saw), and with a stale
+  blk_end the copy's ins_size went NEGATIVE into an unsigned - the
+  space check passed and the memcpy ran with a ~4 GB size (the
+  cursor "behind the [EOF] marker"). The fix: blk_clamp() (a static
+  helper) clamps blk_beg >= txt_beg + 1 and blk_end <= txt_end - 1
+  and rejects an empty/inverted range with "Block error"; it runs at
+  the entry of the copy/move and delete cases; ^K B clamps its mark
+  the same way (a cursor on the [EOF] line marks the last text
+  byte). Verified: the reproduction (mark at the marker line + copy/
+  move + backspaces - no '[' and no "[[EOF]" on screen, the old
+  code corrupted), an ASan edge-hammering block session (0
+  findings), the four gates + smoke 7/7.
 - 2026-11-22 — ^G may delete the newline before the [EOF] marker:
   the doorstep protection was a leftover of the old "marker on its
   own line" invariant, abandoned in the empty-buffer round (the
