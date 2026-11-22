@@ -189,6 +189,14 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-22 — ^G refusal no longer leaves a phantom undo entry:
+  key_scan's ^G did undel_save() BEFORE del_right(), so a refused
+  ^G (end of text, or the newline before the [EOF] marker) left a
+  phantom undo entry - the next ^U "restored" the never-deleted
+  character at the cursor (the extra-newline effect). The refusal
+  conditions now mirror del_right()'s and are checked before the
+  save; a refused ^G stays a silent no-op. Found while bisecting
+  the empty-buffer round's differential tests.
 - 2026-11-22 — External-review round (branch "review"): fixes from
   an independent source review, triaged against our own audit.
   - undel() keeps its undo entry when text_ins() fails (no gap
