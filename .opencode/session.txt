@@ -1424,3 +1424,23 @@ on every combination, including the ULTRIX hardware with the
 kdch1-less terminfo. Merge: fast-forward 7ed290c..7cf1646 and
 pushed. Docs: the AGENTS.md ULTRIX known-issues entry updated (the
 nodelay/ungetch gap-fills + the runtime verification note).
+
+== 2026-11-23 - Session 39: the adm3a arrow-keys story documented ==
+
+The user ran TERM=adm3a in an ADM-3A emulator and found sequences
+like ^J "not recognized". Diagnosis: the adm3a terminfo defines the
+arrows as kcub1=^H, kcud1=^J, kcuf1=^L, kcuu1=^K - curses' keypad()
+translation turns those bytes into the KEY_* arrow codes before
+key_scan runs, so delete-left/help/block-menu/repeat-find are
+hijacked as cursor movement. The user's counter-question (why does
+WordStar under CP/M handle ^J on the same terminal?) settled the
+analysis: CP/M has no interpretation layer - the BDOS delivers raw
+bytes and WordStar's command table IS the keyboard; the UNIX terminfo
+resolves the LF-key/down-arrow byte ambiguity toward the arrow.
+
+Decision (the user): document, no code change - the ADM-3A is the
+native WordStar keyboard (the diamond ^E/^X/^S/^D moves the cursor,
+ESC covers the block menu; the help is the one gap on adm3a). The
+keypad-off input refactor (the editor's own sequence table) noted as
+possible future work. Docs: the reference.txt Cursor-movement note +
+the AGENTS.md decisions entry.

@@ -191,6 +191,24 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-23 — The adm3a terminfo hijacks ^H/^J/^K/^L as the arrow
+  keys, and that is accepted: the adm3a terminfo defines
+  kcub1=^H, kcud1=^J, kcuf1=^L, kcuu1=^K (the ADM-3A's arrows sent
+  exactly those control bytes - vi's hjkl exists for the same
+  reason), so curses' keypad() translation (keypad TRUE) turns the
+  four bytes into KEY_LEFT/DOWN/RIGHT/UP before key_scan runs - on
+  adm3a, delete-left (^H), help (^J), the block menu (^K) and
+  repeat-find (^L) are unreachable as control commands. The user
+  asked why WordStar under CP/M handled ^J on the same terminal:
+  CP/M has no interpretation layer - the BDOS delivers raw bytes,
+  WordStar's command table IS the keyboard - while the UNIX terminfo
+  resolves the byte's ambiguity (the LF key and the down arrow send
+  the SAME byte) toward the arrow. The diamond ^E/^X/^S/^D is
+  unaffected (the letters via Ctrl, not intercepted) and the ESC
+  substitute covers the block menu; the help is the one real gap on
+  adm3a. Documented in reference.txt; rejected: the keypad-off
+  input refactor (the editor's own sequence table, the CP/M-faithful
+  model) - possible future work if the ADM-3A fidelity matters.
 - 2026-11-23 — The DEL key works on terminfos without the
   delete-char capability: on ULTRIX (a vt100-class terminfo without
   kdch1) the DEL key's ESC [ 3 ~ arrived untranslated - the ESC

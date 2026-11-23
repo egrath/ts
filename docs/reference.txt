@@ -37,6 +37,11 @@ Cursor movement
 ^A              Word left
 ^F              Word right
 
+On terminals whose arrow keys send control characters (e.g. adm3a:
+^H/^J/^K/^L), those keys act as the WordStar commands listed in this
+reference - use the ^E/^X/^S/^D diamond for cursor movement and ESC
+for the block menu.
+
 Scrolling
 ---------
 ^W              Scroll screen down one line (text moves down)
