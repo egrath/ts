@@ -1415,3 +1415,12 @@ Verified: the TERM=vt100 reproduction (the raw sequence deletes
 left; master typed the '~'), the fast ESC-S save and the lone-ESC
 menu regressions, ASan clean, the four gates + smoke 7/7. The
 ULTRIX hardware pass is the final word. NOT merged.
+
+== 2026-11-23 - ultdel merged to master ==
+
+The user's three-platform pass confirmed the DEL-key fix: Mac
+(xterm/vt100), DOS, and ULTRIX (xterm/vt100) - DEL and BS both work
+on every combination, including the ULTRIX hardware with the
+kdch1-less terminfo. Merge: fast-forward 7ed290c..7cf1646 and
+pushed. Docs: the AGENTS.md ULTRIX known-issues entry updated (the
+nodelay/ungetch gap-fills + the runtime verification note).
