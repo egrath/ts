@@ -1444,3 +1444,16 @@ ESC covers the block menu; the help is the one gap on adm3a). The
 keypad-off input refactor (the editor's own sequence table) noted as
 possible future work. Docs: the reference.txt Cursor-movement note +
 the AGENTS.md decisions entry.
+
+== 2026-11-23 - Session 40: the queue deliberately emptied ==
+
+The user shelved the left-margin feature (the auto-indent covers
+the practical need; lt_marg and its machinery stay in place for a
+future pass - a future implementation would only add setters plus
+the ruler's change tracking) and closed the three parked review-
+round deferrals as accepted-state decisions (the vsprintf
+hardening, the signal-handler redesign, the TSsaved name race -
+each has a working mitigation, nothing reachable today). The
+decisions entry records it; the Known-issues and the code notes
+stay as honest status records (they describe the state, not
+promises). The queue is empty; nothing is planned.

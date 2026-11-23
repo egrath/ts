@@ -191,6 +191,17 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-23 — The queue is deliberately empty: the left-margin
+  feature is shelved - lt_marg and its machinery stay in place
+  (compile-time fixed, the ruler's L mark live), the auto-indent
+  covers the practical need, and no use case is pressing; a future
+  implementation would only add setters plus the ruler's change
+  tracking, as the code notes already state. The three parked
+  review-round deferrals are closed as accepted-state decisions:
+  the unbounded vsprintf (a documented constraint for new call
+  sites, nothing reachable today), the signal-handler design (the
+  1995 crash-save philosophy with the pointer sanity check, kept),
+  and the TSsaved name race (theoretical). Nothing is planned.
 - 2026-11-23 — The adm3a terminfo hijacks ^H/^J/^K/^L as the arrow
   keys, and that is accepted: the adm3a terminfo defines
   kcub1=^H, kcud1=^J, kcuf1=^L, kcuu1=^K (the ADM-3A's arrows sent
