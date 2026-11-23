@@ -1390,3 +1390,28 @@ The user's DOS runtime pass confirmed both fixes (the save works on
 FAT, the mode detection keeps MSDOS for an empty file). Merge:
 fast-forward 77667a4..5adc13b (the UNIX-only atomic save + the
 vacuous mode-detection fix) and pushed.
+
+== 2026-11-23 - Session 38: the DEL key on ULTRIX (branch "ultdel") ==
+
+The user's ULTRIX pass: the DEL key produced a '~' instead of
+delete-left, with "ESC-" and "Unknown command" flashing briefly.
+Root cause: the DEL key sends ESC [ 3 ~; the ULTRIX terminfo lacks
+the delete-char capability (kdch1), so curses passed the sequence
+through raw - the ESC opened the ^K-substitute menu, '[' hit
+"Unknown command", the tail fell through to the text.
+
+Fix: key_scan's ESC case peeks non-blocking (nodelay): ESC [ 3 ~ ->
+del_left(); anything else ungetch'ed back (LIFO, skipping ERR) and
+the menu runs exactly as before; a lone ESC peeks ERR and opens the
+menu with no added latency. ts.h gained the ULTRIX prototypes for
+nodelay/ungetch. Debugging notes: the capability is kdch1 (kd = the
+down key - the first grep was wrong); the pty probes needed the
+sequence and the save keys COALESCED in one send (the split sends
+hit key_err's prompt_key acknowledgment and ate the '3'); the
+instrumented build's fprintf must come AFTER the wgetch (gcc-16
+also caught the c2/c3 maybe-uninitialized - now initialized to ERR).
+
+Verified: the TERM=vt100 reproduction (the raw sequence deletes
+left; master typed the '~'), the fast ESC-S save and the lone-ESC
+menu regressions, ASan clean, the four gates + smoke 7/7. The
+ULTRIX hardware pass is the final word. NOT merged.

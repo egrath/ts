@@ -42,6 +42,9 @@ void key_scan (void)
 	int	old_x;
 	int	ch;
 	int warnflag2;
+	int	peek = ERR;			/* The ESC-sequence peek bytes */
+	int	c2 = ERR;
+	int	c3 = ERR;
 
 	disp_mode = dnothing;		/* Default to no redisplay */
 
@@ -206,16 +209,53 @@ void key_scan (void)
 		q_key ();
 		break;
 
-	case ESC:
+	case ESC:				/* ^K-substitute, or a RAW escape
+						 * sequence: a DEL key on a termi-
+						 * nal whose terminfo lacks the
+						 * delete-char capability (kdch1,
+						 * e.g. vt100) sends ESC [ 3 ~
+						 * untranslated */
+		/* Peek past the ESC, non-blocking: the terminal sends
+		 * a sequence as one write, so the bytes are queued
+		 * already. A lone ESC peeks ERR and opens the menu
+		 * with no delay. */
+		nodelay (editwin, TRUE);
+		peek = wgetch (editwin);
+		if (peek == '[')		/* A CSI sequence */
+		{
+			c2 = wgetch (editwin);
+			if (c2 == '3')
+			{
+				c3 = wgetch (editwin);
+				if (c3 == '~')	/* ESC [ 3 ~ = DEL key */
+				{
+					nodelay (editwin, FALSE);
+					del_left ();
+					break;
+				}
+			}
+		}
+		nodelay (editwin, FALSE);
+		/* Not our sequence: give the bytes back (LIFO, skipping
+		 * ERR) and run the menu - the old behavior verbatim. */
+		if (c3 != ERR)
+		{
+			ungetch (c3);
+		}
+		if (c2 != ERR)
+		{
+			ungetch (c2);
+		}
+		if (peek != ERR)
+		{
+			ungetch (peek);
+		}
+		warning ("ESC-");
+		k_key ();
+		break;
+
 	case CNTRL_K:				/* Block/Saving commands */
-		if (ch == CNTRL_K)
-		{
-			warning ("^K-");
-		}
-		else
-		{
-			warning ("ESC-");
-		}
+		warning ("^K-");
 		k_key ();
 		break;
 

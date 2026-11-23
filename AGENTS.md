@@ -191,6 +191,21 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-23 — The DEL key works on terminfos without the
+  delete-char capability: on ULTRIX (a vt100-class terminfo without
+  kdch1) the DEL key's ESC [ 3 ~ arrived untranslated - the ESC
+  opened the ^K-substitute menu ("ESC-" + "Unknown command" flashed,
+  per the user), the tail fell through to the text (a '~' typed).
+  key_scan's ESC case now peeks non-blocking (nodelay): ESC [ 3 ~ ->
+  del_left(); anything else is ungetch'ed back (LIFO, skipping ERR)
+  and the menu runs exactly as before - a lone ESC peeks ERR and
+  opens the menu with no added latency. No ULTRIX ifdef: every
+  kdch1-less terminfo benefits. ts.h gained the ULTRIX prototypes
+  for nodelay/ungetch (the known one-line pattern). Verified: the
+  TERM=vt100 pty reproduction (the raw sequence now deletes left;
+  master typed the '~'), the fast ESC-S save and the lone-ESC menu
+  regressions, ASan clean, the four gates + smoke 7/7. The ULTRIX
+  hardware pass is the final word.
 - 2026-11-22 — load() no longer misreads "no line endings" as Unix:
   the ending detection applied its verdict unconditionally, so
   loading a 0-byte or terminator-less file overwrote the platform
