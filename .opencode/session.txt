@@ -1690,3 +1690,33 @@ line_y() boundary column fix, the ^Q R/^Q C/^Q I column homing,
 the reference.txt wording, the decisions entry. The branch
 cleanup: qjump and displayfix stay on the remote as merged history
 (displayfix's fix is in 83ccca6, qjump in 0609490).
+
+== 2026-11-24 - the repaint scopes resized for the disabled line-ops (branch "repaintfix") ==
+
+The user's Pi/Windows report: writing text and pressing ENTER,
+the [EOF] marker sometimes disappears (not gone - the ^Q R/^Q C
+navigation works and ^O L restores it at the proper location).
+
+Root cause: the [EOF]-everywhere fix (ea7b065) disabled the four
+hardware line-ops but left their repaint scopes sized for them -
+dinsln painted two rows (relying on winsertln shifting the rows
+below), dscrlup/dscrldn painted one row (relying on wdeleteln/
+winsertln). On a mid-file RETURN the rows below the split stayed
+stale-by-one: the marker's true row never painted. ncurses' doupdate
+scroll optimization (idlok TRUE) hardware-scrolled the diff on
+macOS and masked the bug; PDCurses/Windows and the Pi console got
+no rescue. Pure virtual-screen logic - all platforms.
+
+Fix: dinsln repaints the tail below the new line (empty for the
+append case - zero extra traffic); the scroll modes repaint the
+full window.
+
+The vt100n methodology: a vt100 terminfo with csr/ri stripped (tic
+into ~/.terminfo, the entry renamed) so the optimizer cannot mask
+the difference - the pre-fix/post-fix A/B on the identical repro:
+pre-fix row 4 stale-blank (the marker invisible), post-fix
+"ghi[EOF]" painted. The display grid (split/scrolls/append/^O L)
+7/7; smoke 7/7; the four gates; ASan/UBSan clean.
+
+The vt100n entry stays in ~/.terminfo for future display rounds.
+Pushed on the repaintfix branch; merged after the user's pass.

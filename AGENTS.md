@@ -199,6 +199,28 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-24 — The repaint scopes resized for the disabled hardware
+  line-ops (the invisible-[EOF]-marker bug): the [EOF]-everywhere fix
+  disabled the four winsertln/wdeleteln sites but left their repaint
+  scopes sized for them - dinsln painted only TWO rows (the line
+  above + the new line) and dscrlup/dscrldn painted ONE row, all
+  assuming the physical window shift that no longer happens. On a
+  mid-file RETURN the rows below the split stayed stale-by-one: the
+  [EOF] marker's true row never painted (the user's Pi/Windows
+  report - the marker "disappears", restored by the ^O L full
+  redraw; the buffer intact, hence the ^Q R/^Q C navigation
+  verified). ncurses' doupdate scroll optimization (idlok TRUE)
+  masked it on macOS by hardware-scrolling the diff; PDCurses/Windows
+  and the Pi console get no such rescue. Fix: dinsln repaints the
+  tail below the new line (disp_page(txt_x + 1, scr_xend) - empty
+  for the common append case, zero extra traffic) and the scroll
+  modes repaint the full window. Platform-independent virtual-screen
+  logic. Verification: the vt100n A/B (a vt100 terminfo with csr/ri
+  stripped so the optimizer cannot mask - pre-fix the marker row
+  stale-blank, post-fix painted), the 7-scenario display grid
+  (split/scrolls/append/^O L) 7/7, smoke 7/7, the four gates, the
+  ASan/UBSan pass clean. Runtime-verified by the maintainer on the
+  Pi and Windows; merged to master.
 - 2026-11-24 — The [EOF]-everywhere display desync fixed, and the
   merge omission corrected: the root cause was the ncurses hardware
   line-insert/delete (winsertln/wdeleteln with idlok) desyncing the

@@ -927,6 +927,11 @@ void display (void)
 			}
 			dsp_line (p, txt_x - scr_xbeg + 1);
 		}
+		/* The hardware insert-line is disabled (it desyncs the
+		 * display at the marker boundary), so the rows BELOW the
+		 * new line no longer shift physically: repaint the tail.
+		 * Appending at the buffer end leaves this loop empty. */
+		disp_page (txt_x + 1, scr_xend);
 		wnoutrefresh (editwin);
 		break;
 
@@ -939,13 +944,13 @@ void display (void)
 	case dscrlup:				/* Scroll up */
 		wmove (editwin, 0, 0);
 		/* wdeleteln (editwin); */
-		disp_page (scr_xend, scr_xend);
+		disp_page (scr_xbeg, scr_xend);	/* No hw shift: repaint all */
 		break;
 
 	case dscrldn:				/* Scroll down */
 		wmove (editwin, 0, 0);
 		/* winsertln (editwin); */
-		disp_page (scr_xbeg, scr_xbeg);
+		disp_page (scr_xbeg, scr_xend);	/* No hw shift: repaint all */
 		break;
 
 	case dnothing:
