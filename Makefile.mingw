@@ -1,0 +1,53 @@
+#
+# Makefile for cross compiling TextStar from Macintosh to Windows
+# using mingw-w64 (binary "ts.exe", PDCurses wincon driver).
+#
+#--------------------- Compiler Flags ---------------------------
+PDCURSES = /Users/egon/opt/pdcurses.mingw
+CFLAGS = -O2 -std=c89 -Wpedantic -Wall -Wextra -Werror
+EFLAGS = -DDOS -I$(PDCURSES)
+LFLAGS = $(PDCURSES)/wincon/pdcurses.a
+CC = x86_64-w64-mingw32-gcc
+#
+#--------------------- Directories ------------------------------
+SRCDIR = src
+BUILDDIR = build.mingw
+TARGET = ${BUILDDIR}/ts.exe
+
+SOURCES = ${SRCDIR}/command.c ${SRCDIR}/data.c ${SRCDIR}/display.c \
+	${SRCDIR}/funcs.c ${SRCDIR}/ts.c
+
+OBJS = ${BUILDDIR}/command.o ${BUILDDIR}/data.o ${BUILDDIR}/display.o \
+	${BUILDDIR}/funcs.o ${BUILDDIR}/ts.o
+
+################# Do not modify below this line #####################
+
+.PHONY : all clean build
+
+all	: ${TARGET}
+
+${TARGET}	: ${OBJS}
+	${CC} ${CFLAGS} -o ${TARGET} ${OBJS} ${LFLAGS}
+
+clean	:
+	rm -f ${OBJS} ${TARGET}
+
+build	:
+	mkdir -p ${BUILDDIR}
+
+# Dependencies
+
+${BUILDDIR}/command.o : ${SRCDIR}/command.c ${SRCDIR}/ts.h build
+	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
+
+${BUILDDIR}/data.o : ${SRCDIR}/data.c ${SRCDIR}/ts.h build
+	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
+
+${BUILDDIR}/display.o : ${SRCDIR}/display.c ${SRCDIR}/ts.h build
+	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
+
+${BUILDDIR}/funcs.o : ${SRCDIR}/funcs.c ${SRCDIR}/ts.h ${SRCDIR}/version.h build
+	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
+
+${BUILDDIR}/ts.o : ${SRCDIR}/ts.c ${SRCDIR}/ts.h ${SRCDIR}/version.h build
+	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@

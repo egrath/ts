@@ -1489,3 +1489,28 @@ The user tested and confirmed the ^T behavior. Merge: fast-forward
 be5e7e5..169013d and pushed. Note: untracked Makefile.mingw and
 build.mingw/ appeared in the tree (the user's MinGW/Windows build
 experiment) - left untracked and out of all commits.
+
+== 2026-11-23 - Session 42: the mingw-w64 Windows gate (branch "mingw") ==
+
+The user installed mingw-w64 (the macOS cross-compile to Windows),
+built PDCurses for Windows (~/opt/pdcurses.mingw, the wincon driver)
+and drafted a working Makefile.mingw. Adopted as the FOURTH gate:
+Makefile.mingw standardized to the house style (-O2 -std=c89
+-Wpedantic -Wall -Wextra -Werror, the explicit ts.exe, the
+build.mingw dir rule, clean, the duplicates removed) - the mingw
+build runs after every source change like the other gates.
+
+Fixed the findings the mingw gcc surfaced: do_alloc()'s 80286
+truncation guard compared unsigned int with long (-Wsign-compare,
+-Wextra) - explicit casts, the truncation semantics unchanged. -O2
+surfaced nothing further. -DDOS kept deliberately: on Windows the
+DOS-guarded paths are correct (COMSPEC, TEMP, MSDOS mode,
+backslashes) - documented in the build section.
+
+Debug notes: the mingw gcc auto-appends .exe to -o build.mingw/ts
+(made explicit now); infocmp's delete-char capability is kdch1 (kd =
+the down key - the earlier grep was wrong).
+
+Verified: the mingw build clean with -O2 -Werror, ts.exe produced;
+clang/gcc-16/DOS gates 0; smoke 7/7. The Windows runtime is the
+user's pass. NOT merged - user tests first.

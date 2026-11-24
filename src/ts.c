@@ -170,12 +170,12 @@ static int do_alloc (long allocsize)
 
 	mallarg = allocwork;			/* Convert to unsigned for malloc() */
 
-	while (mallarg != allocwork)	/* Test for truncation on 80286 */
+	while ((long) mallarg != allocwork)	/* Test for truncation on 80286 */
 	{
 		allocwork -= 100;
 		mallarg = allocwork;
 	}
-	if (mallarg < (allocsize + 100))	/* Not enough space */
+	if ((long) mallarg < (allocsize + 100))	/* Not enough space */
 	{
 		return (0);
 	}

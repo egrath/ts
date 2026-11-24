@@ -60,10 +60,17 @@ cursor clamps at the marker start and nothing can be written behind it.
 - **DOS** (OpenWatcom, DOS/4GW 32-bit flat, PDCurses):
   `source ~/opt/openwatcom/env.txt && wmake -f Makefile.wcc`
   builds `build.dos/ts.exe` (`wmake -f Makefile.wcc clean` cleans).
-- Requirements: a C89 compiler and curses (ncurses on UNIX, PDCurses on DOS —
-  `~/opt/pdcurses`, library `dos/pdcurses.lib`).
+- **Windows** (mingw-w64 cross-compile from macOS, PDCurses wincon
+  driver at `~/opt/pdcurses.mingw`): `make -f Makefile.mingw` builds
+  `build.mingw/ts.exe`. Built after every source change, like the
+  other gates. `-DDOS` selects the Windows-correct DOS-guarded code
+  paths (COMSPEC, TEMP, MSDOS file mode, backslash handling).
+- Requirements: a C89 compiler and curses (ncurses on UNIX, PDCurses
+  on DOS and Windows — `~/opt/pdcurses`, library `dos/pdcurses.lib`,
+  and `~/opt/pdcurses.mingw`, library `wincon/pdcurses.a`).
 - Flags: `-O2 -std=c89 -Wpedantic -Wall -Werror` — **zero warnings is a hard
-  requirement**; do not weaken the flags to hide problems.
+  requirement**; do not weaken the flags to hide problems (the mingw gate
+  adds `-Wextra` and `-DDOS`).
 - DOS CFLAGS: `-bt=dos4g -mf -dDOS -wx -zq -oneatx` (plus the PDCurses/src
   include paths) — the optimizer set for 386+ systems. Note: `-3 -s` were
   tried on top (`-3` explicit 386 codegen, `-s` no stack checks) and
@@ -191,6 +198,17 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-23 — The mingw-w64 Windows build adopted as the fourth
+  gate: Makefile.mingw (the user's working draft, standardized to
+  the house style - -O2, -Werror, the explicit ts.exe, the
+  build.mingw dir rule, clean, no duplicated variables) cross-
+  compiles build.mingw/ts.exe from macOS with the PDCurses wincon
+  driver. -DDOS is deliberate: on Windows the DOS-guarded code paths
+  are the correct ones (COMSPEC, TEMP, MSDOS file mode, backslash
+  handling). Fixed the findings the mingw gcc surfaced: do_alloc()'s
+  80286 truncation guard compared unsigned int with long - explicit
+  casts, the truncation semantics unchanged. The mingw build runs
+  after every source change, like the other gates.
 - 2026-11-23 — ^T (delete word) never deletes the newline: the old
   loop deleted the character first and checked afterwards, so a word
   at the end of the line took the newline with it (the lines joined).
