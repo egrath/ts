@@ -1681,3 +1681,12 @@ behavior, a harness artifact; the paced run is byte-correct.
 
 Four gates green; smoke 7/7. On the qjump branch, NOT merged - the
 user's platform pass is next.
+
+== 2026-11-24 - qjump merged to master ==
+
+The user's pass: "looks good". The qjump branch fast-forwarded to
+master (3dabeb8..0609490) and pushed. Master now carries: the
+line_y() boundary column fix, the ^Q R/^Q C/^Q I column homing,
+the reference.txt wording, the decisions entry. The branch
+cleanup: qjump and displayfix stay on the remote as merged history
+(displayfix's fix is in 83ccca6, qjump in 0609490).

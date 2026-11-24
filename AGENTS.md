@@ -236,6 +236,7 @@ cursor clamps at the marker start and nothing can be written behind it.
   the 16-scenario grid (five ^Q commands x the no-trailing-newline/
   ENTER/multi-line shapes; status line + saved bytes) 16/16, smoke
   7/7, the four gates, the ASan/UBSan pass over the boundary poking.
+  Runtime-verified by the maintainer; merged to master (0609490).
 - 2026-11-24 — The status-line cursor flicker fixed with a
   curs_set pair: display() wraps its whole update in
   curs_set(0) ... curs_set(1) - the hardware cursor travels to
