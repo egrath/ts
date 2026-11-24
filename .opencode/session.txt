@@ -1482,3 +1482,10 @@ Verified: the six-case matrix (the word at the line end, the ^T^T
 nuance, the mid-line, the space run, the punctuation stop), the
 undo round-trip, ASan clean, the four gates + smoke 7/7. NOT
 merged - user tests first.
+
+== 2026-11-24 - delword merged to master ==
+
+The user tested and confirmed the ^T behavior. Merge: fast-forward
+be5e7e5..169013d and pushed. Note: untracked Makefile.mingw and
+build.mingw/ appeared in the tree (the user's MinGW/Windows build
+experiment) - left untracked and out of all commits.
