@@ -28,6 +28,7 @@ auto-indent on RETURN and ^N, HOME/END line keys.
 | `src/ts.h` | Shared types, globals (`extern`), full C89 prototypes |
 | `src/version.h` | Version string |
 | `Makefile.wcc` | OpenWatcom build for DOS (DOS/4GW + PDCurses) |
+| `Makefile.mingw` | mingw-w64 cross-build for Windows (PDCurses wincon) |
 | `docs/reference.txt` | User-facing command reference (all keys and menus). **Keep this current**: every new or changed command goes in here |
 | `_original/sue07i.tgz` | Pristine 0.7i sources, reference only |
 

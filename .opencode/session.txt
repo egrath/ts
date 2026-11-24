@@ -1514,3 +1514,12 @@ the down key - the earlier grep was wrong).
 Verified: the mingw build clean with -O2 -Werror, ts.exe produced;
 clang/gcc-16/DOS gates 0; smoke 7/7. The Windows runtime is the
 user's pass. NOT merged - user tests first.
+
+== 2026-11-23 - mingw merged to master ==
+
+The user approved after the build verification. Merge: fast-forward
+26c53dd..68e5561 (the mingw gate: the standardized Makefile.mingw +
+the do_alloc sign-compare casts) and pushed. Docs: the AGENTS.md
+source map gained Makefile.mingw; the build section, the
+requirements, the flags line and the decisions entry were already
+current from the implementation round.
