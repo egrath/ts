@@ -478,18 +478,20 @@ void q_key (void)
 
 	switch (keyin)
 	{
-	case CNTRL_R:			/* To beginning of file */
+	case CNTRL_R:			/* To beginning of file: line 1, column 1 */
 	case KEY_PPAGE:
 		txt_x = move_x (0);
+		txt_y = line_y (1);
 		break;
 
-	case CNTRL_C:			/* To end of file */
+	case CNTRL_C:			/* To end of file: last line, last column */
 	case KEY_NPAGE:
 		do
 		{
 			old_x = txt_x;
 		}
 		while ((txt_x = move_x (txt_x + 999)) != old_x);
+		txt_y = line_y (INT_MAX);
 		break;
 
 	case CNTRL_F:			/* Find string */

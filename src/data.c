@@ -463,7 +463,15 @@ int line_y (int col)
 	}
 	else
 	{
-		col = 1;
+		/* The gap sits at (or past) txt_end - the [EOF] marker's
+		 * '['. Since the empty-buffer round the marker trails
+		 * the last text line INLINE, so that position's honest
+		 * column is the one after the last text character;
+		 * column() bounds at txt_end and never enters the
+		 * marker. The old col = 1 answer was the pre-round model
+		 * (the marker on its own row) and desynced the rendered
+		 * cursor from the gap - the ^Q C/^Q D/^Q I boundary bug. */
+		col = column (txt_end);
 		txt_ptr = txt_end;
 	}
 	text_move ();

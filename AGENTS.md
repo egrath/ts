@@ -217,6 +217,25 @@ cursor clamps at the marker start and nothing can be written behind it.
   four gates + smoke 7/7 + the scripted ENTER x40 / Backspace x40
   repro clean on the merged master; the ULTRIX rebuild is the
   user's pass.
+- 2026-11-24 — The ^Q jump commands home the column; the inline-
+  marker column lie fixed: line_y()'s boundary branch (the gap at
+  txt_end - the marker's '[') answered col 1 - the pre-empty-buffer-
+  round model (the marker on its own row). Since the marker trails
+  the last text line INLINE, the honest column is len + 1: the
+  branch now returns column(txt_end) (bounds at txt_end, never
+  enters the marker). The lie desynced the rendered cursor from the
+  gap on any buffer whose last line has no trailing newline: ^Q C
+  jumped the cursor to the beginning of the file, ^Q D showed C 1,
+  and the ^G/^T refusals (correct - the gap really is at the
+  marker) looked like dead keys. Pure buffer arithmetic, all
+  platforms; ULTRIX only surfaced it. The rework (the maintainer's
+  call, WordStar-exact): ^Q R = line 1 column 1, ^Q C = last line
+  last column, ^Q I = column 1 of the prompted line - the move_x()
+  jump lands, then an explicit line_y() pins the column (^Q S/^Q D
+  and the arrows keep the documented column preservation). Verified:
+  the 16-scenario grid (five ^Q commands x the no-trailing-newline/
+  ENTER/multi-line shapes; status line + saved bytes) 16/16, smoke
+  7/7, the four gates, the ASan/UBSan pass over the boundary poking.
 - 2026-11-24 — The status-line cursor flicker fixed with a
   curs_set pair: display() wraps its whole update in
   curs_set(0) ... curs_set(1) - the hardware cursor travels to

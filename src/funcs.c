@@ -582,8 +582,8 @@ int replace (void)
  *     None.
  * notes:
  *     A non-numeric answer beeps with "Value error"; the cursor lands
- *     on the closest reachable line and the screen centers on it
- *     (dpages).
+ *     on column 1 of the closest reachable line and the screen centers
+ *     on it (dpages).
  * ####################################################################### */
 void goto_line (void)
 {
@@ -595,8 +595,9 @@ void goto_line (void)
 	{
 		if (sscanf (respptr, "%d", &line_no) == 1)
 		{
-			/* Move to line number given */
+			/* Move to line number given; cursor to column 1 */
 			txt_x = move_x (line_no);
+			txt_y = line_y (1);
 			disp_mode = dpages;
 		}
 		else

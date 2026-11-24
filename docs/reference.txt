@@ -56,9 +56,9 @@ Quick menu (^Q)
 ---------------
 ^Q S or HOME   Cursor to the start of the line
 ^Q D or END    Cursor to the end of the line
-^Q R or PgUp   Cursor to the start of the file
-^Q C or PgDn   Cursor to the end of the file
-^Q I           Go to a line number (prompted)
+^Q R or PgUp   Cursor to the start of the file (line 1, column 1)
+^Q C or PgDn   Cursor to the end of the file (last line, last column)
+^Q I           Go to a line number (prompted); cursor to column 1
 ^Q Y           Delete to the end of the line
 
 Deletion and undo

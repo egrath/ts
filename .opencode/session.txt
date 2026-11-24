@@ -1641,3 +1641,43 @@ Verified: the four gates + smoke 7/7 + the scripted ENTER x40 /
 Backspace x40 repro clean on the merged master (no [EOF]-everywhere,
 0-byte save - the buffer intact). The ULTRIX rebuild is the user's
 pass.
+
+== 2026-11-24 - the ^Q jump rework + the inline-marker column lie (branch "qjump") ==
+
+The user's all-platform report: new file, "ABCD" (no ENTER),
+^Q R does nothing, ^Q C jumps the cursor to the BEGINNING, and
+^G/^T cease to work from there; with a trailing ENTER it behaves.
+Code-traced (all-platform pure buffer arithmetic - ULTRIX only
+surfaced it):
+
+line_y()'s boundary branch (the gap at txt_end - the marker's '[')
+answered col 1 - the pre-empty-buffer-round model (the marker on
+its own row). With the marker trailing INLINE, the honest column is
+len + 1. move_x()'s txt_y = 1 intermediate + new_line()'s 0-shift
+return at the boundary routed the ^Q C column restore into that
+branch: txt_y = 1 (rendered col 1) while the gap stayed at txt_end.
+^G/^T then refused CORRECTLY (the gap is at the marker) - made to
+look dead by the lying cursor. ^Q D on the marker line carried the
+same latent desync (C 1 while the gap sat after the last char).
+
+Fix: the branch returns column(txt_end) - the honest column (for a
+trailing-newline buffer it computes the same 1 as before: provably
+unchanged there).
+
+The rework (the maintainer's call, WordStar-exact): ^Q R = line 1
+column 1, ^Q C = last line last column, ^Q I = column 1 of the
+prompted line - move_x() lands the line, an explicit line_y() pins
+the column. ^Q S/^Q D and the arrows keep the documented column
+preservation.
+
+Verified: the 16-scenario grid (five ^Q commands x no-ENTER/ENTER/
+multi-line shapes; the status line from the raw pty log + the saved
+bytes) 16/16 - two initial FAILs were the harness capturing the
+status after the trailing BACKSPACEs, not the editor. The ASan/
+UBSan pass over the boundary poking: clean. The burst-mode grid
+anomaly (an 'X' vanishing) traced to key_err's press-a-key
+"Unknown command" acknowledgment eating the next queued key - 1995
+behavior, a harness artifact; the paced run is byte-correct.
+
+Four gates green; smoke 7/7. On the qjump branch, NOT merged - the
+user's platform pass is next.
