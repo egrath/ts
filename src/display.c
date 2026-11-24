@@ -953,6 +953,15 @@ void display (void)
 	}
 	idlok (editwin, FALSE);		/* Disable hardware scrolling for help, etc.*/
 
+	/* Hide the terminal cursor while the status, ruler and text
+	 * cells are updated: the hardware cursor travels to every
+	 * written cell and would be visible in the status line
+	 * (the flicker). Shown again at the end, placed by the edit
+	 * window's refresh. On terminals without cursor hiding
+	 * (civis) curs_set() fails and is ignored - there the
+	 * hardware limitation remains. */
+	curs_set (0);
+
 	/* update cursor position in status line */
 	status_linecol (0);
 
@@ -966,6 +975,8 @@ void display (void)
 	 * the status and ruler refreshes never move it (no flicker). */
 	wnoutrefresh (editwin);
 	doupdate ();
+
+	curs_set (1);
 }
 
 /* ================= HELP SCREEN DEFINITIONS & ROUTINES ================== */

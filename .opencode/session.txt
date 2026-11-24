@@ -1548,3 +1548,21 @@ bytes for the same session).
 
 Verified: the replay grids unchanged, ASan clean, the four gates +
 the mingw rebuild + smoke 7/7. NOT merged - user tests on the Pi.
+
+== 2026-11-24 - the status-line cursor flicker: curs_set pair ==
+
+The user's Pi pass: the [EOF] bug and almost all the flicker are
+gone; the remaining flicker is the terminal cursor briefly visible
+in the status line ("L num") during held-key scrolling - the
+hardware cursor travels to every written cell during doupdate()
+(leaveok cannot prevent the mid-write pass-through).
+
+Fix: curs_set(0) at the start of display(), curs_set(1) at the end
+- the hardware cursor is invisible during all cell updates and
+reappears placed at the edit position. The return value is ignored
+(terminals without civis - e.g. the real ADM-3A - cannot hide the
+cursor; there the limitation is hardware).
+
+Verified: built clean, smoke 7/7, gcc-16/DOS/mingw 0 warnings, the
+functional check (the status, the ruler, the saved bytes correct).
+Pushed to GitHub for the Pi pass. NOT merged.
