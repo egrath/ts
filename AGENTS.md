@@ -199,6 +199,24 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-24 — The [EOF]-everywhere display desync fixed, and the
+  merge omission corrected: the root cause was the ncurses hardware
+  line-insert/delete (winsertln/wdeleteln with idlok) desyncing the
+  physical screen at the marker boundary (backspace-driven line
+  removal on a truly-empty buffer) - the fix disables all four
+  hardware line-ops (the dtoeos/dinsln/dscrlup/dscrldn cases); the
+  affected rows repaint instead. The fix (ea7b065) had been
+  committed on the displayfix branch, but the curs_set round checked
+  out the OLDER flicker line and the flicker->master merge never
+  carried it - master shipped without the fix and the ULTRIX
+  rebuild showed the original bug (a merge omission, not a
+  regression; the Pi pass had validated the branch, not master).
+  displayfix is merged now (83ccca6). The lesson: verify the fix
+  commit is an ancestor of master (git merge-base --is-ancestor)
+  before declaring a platform pass valid for master. Verified: the
+  four gates + smoke 7/7 + the scripted ENTER x40 / Backspace x40
+  repro clean on the merged master; the ULTRIX rebuild is the
+  user's pass.
 - 2026-11-24 — The status-line cursor flicker fixed with a
   curs_set pair: display() wraps its whole update in
   curs_set(0) ... curs_set(1) - the hardware cursor travels to

@@ -1618,3 +1618,26 @@ Added the three prototypes; the Known-issues entry updated. The
 implicit-int declarations happened to work at runtime (all three
 return int) - the warnings were the hygiene gap. The ULTRIX rebuild
 is the user's pass.
+
+== 2026-11-24 - the [EOF] fix merged to master (the merge omission corrected) ==
+
+The user's ULTRIX rebuild from master showed the [EOF]-everywhere
+bug again. Root cause of the "regression": none - the display fix
+(ea7b065) lived only on the displayfix branch; the curs_set round
+had checked out the OLDER flicker line (f87d899) instead of
+continuing on displayfix, and the flicker->master merge never
+carried ea7b065 (git merge-base --is-ancestor: NO). The Pi pass had
+tested the displayfix branch, not master - so the merge note above
+("bcf4425..d3b18ec: ... the display-desync fix ...") was wrong: the
+desync fix was NOT in that range.
+
+Fix: the displayfix branch merged into master (83ccca6) - the
+session.txt conflict resolved chronologically, display.c
+auto-merged. The lesson: a merge that leaves the fix commit off the
+merged branch looks identical to "done" - check git merge-base
+--is-ancestor before declaring a platform pass valid for master.
+
+Verified: the four gates + smoke 7/7 + the scripted ENTER x40 /
+Backspace x40 repro clean on the merged master (no [EOF]-everywhere,
+0-byte save - the buffer intact). The ULTRIX rebuild is the user's
+pass.
