@@ -1720,3 +1720,11 @@ pre-fix row 4 stale-blank (the marker invisible), post-fix
 
 The vt100n entry stays in ~/.terminfo for future display rounds.
 Pushed on the repaintfix branch; merges after the user's platform pass.
+
+== 2026-11-24 - repaintfix merged to master ==
+
+The user's Pi/Windows pass: "looks good". The repaintfix branch
+fast-forwarded to master (6530b17..93a286b) and pushed. Master now
+carries the shift-free repaint scopes (the dinsln tail, the full-
+window scrolls), the decisions entry (runtime-verified, merged),
+and the session record. The queue stands empty.
