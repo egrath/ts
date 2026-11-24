@@ -1,5 +1,6 @@
 /build/
 /build.dos/
+/build.mingw/
 *.err
 test.txt
 TEST.TXT
