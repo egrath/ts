@@ -1719,4 +1719,4 @@ pre-fix row 4 stale-blank (the marker invisible), post-fix
 7/7; smoke 7/7; the four gates; ASan/UBSan clean.
 
 The vt100n entry stays in ~/.terminfo for future display rounds.
-Pushed on the repaintfix branch; merged after the user's pass.
+Pushed on the repaintfix branch; merges after the user's platform pass.

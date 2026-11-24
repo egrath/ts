@@ -219,8 +219,9 @@ cursor clamps at the marker start and nothing can be written behind it.
   stripped so the optimizer cannot mask - pre-fix the marker row
   stale-blank, post-fix painted), the 7-scenario display grid
   (split/scrolls/append/^O L) 7/7, smoke 7/7, the four gates, the
-  ASan/UBSan pass clean. Runtime-verified by the maintainer on the
-  Pi and Windows; merged to master.
+  ASan/UBSan pass clean. The bug was observed by the maintainer on
+  the Pi and Windows; the fix is pushed (repaintfix) and merges
+  after the maintainer's platform pass.
 - 2026-11-24 — The [EOF]-everywhere display desync fixed, and the
   merge omission corrected: the root cause was the ncurses hardware
   line-insert/delete (winsertln/wdeleteln with idlok) desyncing the
