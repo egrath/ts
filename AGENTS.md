@@ -199,6 +199,18 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-24 — The status-line cursor flicker fixed with a
+  curs_set pair: display() wraps its whole update in
+  curs_set(0) ... curs_set(1) - the hardware cursor travels to
+  every written cell during doupdate() and was briefly visible in
+  the status line ("L num") during held-key scrolling (the user's
+  Pi report; leaveok cannot prevent the mid-write pass-through).
+  The cursor is now invisible during all updates and reappears
+  placed at the edit position. curs_set()'s return is ignored:
+  terminals without cursor hiding (civis - e.g. the real ADM-3A)
+  cannot hide the cursor; there the limitation is hardware.
+  Runtime-verified on the Pi by the maintainer: the [EOF] bug and
+  the flicker are gone.
 - 2026-11-23 — The status/ruler flicker removed (the slow-terminal
   fix): display()'s tail did THREE wrefresh calls per keystroke
   (the status line unconditionally, the ruler on change, the edit

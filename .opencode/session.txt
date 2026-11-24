@@ -1566,3 +1566,25 @@ cursor; there the limitation is hardware).
 Verified: built clean, smoke 7/7, gcc-16/DOS/mingw 0 warnings, the
 functional check (the status, the ruler, the saved bytes correct).
 Pushed to GitHub for the Pi pass. NOT merged.
+
+== 2026-11-24 - flicker merged to master; the curs_set polish ==
+
+The user's Pi pass confirmed: the [EOF] bug gone, almost all the
+flicker gone; the remaining flicker was the terminal cursor briefly
+visible in the status line ("L num") during held-key scrolling -
+the hardware cursor travels to every written cell during doupdate()
+and leaveok cannot prevent the mid-write pass-through.
+
+Fix: the curs_set pair - curs_set(0) at the start of display(),
+curs_set(1) at the end: the hardware cursor invisible during all
+updates, reappearing placed at the edit position. The return value
+ignored (terminals without civis - the real ADM-3A - cannot hide
+the cursor; the limitation is hardware).
+
+Merge: the flicker branch fast-forwarded to master
+(bcf4425..d3b18ec: the flicker fixes + the display-desync fix +
+the curs_set pair) and pushed. Docs: the AGENTS.md decisions entry
+(the curs_set pair + the Pi verification), the ULTRIX known-issues
+entry updated earlier (the nodelay/ungetch gap-fills), the
+reference.txt unchanged (nothing user-visible beyond the fixed
+behavior). The user's three-platform pass: Mac, DOS, ULTRIX.
