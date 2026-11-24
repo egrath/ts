@@ -1548,3 +1548,23 @@ bytes for the same session).
 
 Verified: the replay grids unchanged, ASan clean, the four gates +
 the mingw rebuild + smoke 7/7. NOT merged - user tests on the Pi.
+
+== 2026-11-24 - the [EOF]-everywhere display bug root-caused (branch "flicker") ==
+
+The focused session found the root cause: the ncurses hardware
+line-insert/delete (winsertln/wdeleteln with idlok) desyncs the
+physical screen when the buffer reaches the marker boundary during
+backspace-driven line removal - dsp_line() called with the [EOF]
+marker start returns the marker start itself, so disp_page paints
+the marker on every row. Confirmed with relative-offset
+instrumentation (line pointers per row, gap state per disp_page).
+
+Fix: all four hardware line-ops disabled (the dtoeos/dscrlup/
+dscrldn/dinsln cases) - the display repaints the affected rows
+instead. The [EOF]-everywhere is gone in the repro. The flicker
+fixes (leaveok, the tracking, the consolidation) are orthogonal and
+verified innocent by the bisect.
+
+Open: the dscrlup/dscrldn repaint scope (one row vs full) needs a
+review; the Pi runtime pass confirms the fix. Committed on the
+flicker branch, not merged.
