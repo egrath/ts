@@ -720,7 +720,7 @@ static void disp_page (int x_top, int x_bot)
 	}
 
 	x_top = x_top - scr_xbeg + 1;	/* Relative to top of page */
-	x_bot = x_bot - scr_xbeg + 1;	/*    "      "  "  "    "  */
+	x_bot = x_bot - scr_xbeg + 1;	/*    "      "  "    "  */
 
 	for (i = x_top; i <= x_bot; i++)
 	{
@@ -902,13 +902,13 @@ void display (void)
 
 	case dtoeos:			/* Delete line or redisplay from line down */
 		wmove (editwin, txt_x - scr_xbeg + 1, 0);
-		wdeleteln (editwin);
+		/* wdeleteln (editwin); */
 		disp_page (txt_x, scr_xend);
 		break;
 
 	case dinsln:  			/* Insert new line or redisplay from ln. above */
 		wmove (editwin, txt_x - scr_xbeg, 0);
-		winsertln (editwin);
+		/* winsertln (editwin); */
 		{
 			char	*p;		/* The new line's first character */
 			char	*above;		/* The line above's last char + 1 */
@@ -938,13 +938,13 @@ void display (void)
 
 	case dscrlup:				/* Scroll up */
 		wmove (editwin, 0, 0);
-		wdeleteln (editwin);
+		/* wdeleteln (editwin); */
 		disp_page (scr_xend, scr_xend);
 		break;
 
 	case dscrldn:				/* Scroll down */
 		wmove (editwin, 0, 0);
-		winsertln (editwin);
+		/* winsertln (editwin); */
 		disp_page (scr_xbeg, scr_xbeg);
 		break;
 
