@@ -694,8 +694,9 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 - **ULTRIX build quirks** (compiles and links with gcc on real ULTRIX
   hardware): cursesX.h declares `wgetch`/`wmove`/etc. but NOT
-  `wrefresh`/`wattrset`/`wclrtoeol`/`nodelay`/`ungetch` — ts.h
-  prototypes them under `#ifdef ULTRIX`. It also has no color API (mono
+  `wrefresh`/`wattrset`/`wclrtoeol`/`wnoutrefresh`/`doupdate`/`curs_set`/
+  `nodelay`/`ungetch`/`leaveok` — ts.h prototypes them under
+  `#ifdef ULTRIX`. It also has no color API (mono
   build) and no `KEY_SLEFT`/`KEY_SRIGHT`/`KEY_SUSPEND`/`KEY_HELP`/
   `KEY_SFIND` codes (emulated, dead cases). More missing declarations
   may surface — same one-line fix pattern. Runtime-verified by the

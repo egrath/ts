@@ -1588,3 +1588,13 @@ the curs_set pair) and pushed. Docs: the AGENTS.md decisions entry
 entry updated earlier (the nodelay/ungetch gap-fills), the
 reference.txt unchanged (nothing user-visible beyond the fixed
 behavior). The user's three-platform pass: Mac, DOS, ULTRIX.
+
+== 2026-11-24 - ULTRIX gap-fill: the flicker-round declarations ==
+
+The user's ULTRIX build warned: wnoutrefresh, curs_set, doupdate
+implicitly declared - the flicker-round functions were missing from
+ts.h's ULTRIX gap-fill block (cursesX.h declares almost nothing).
+Added the three prototypes; the Known-issues entry updated. The
+implicit-int declarations happened to work at runtime (all three
+return int) - the warnings were the hygiene gap. The ULTRIX rebuild
+is the user's pass.
