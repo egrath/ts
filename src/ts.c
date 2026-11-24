@@ -459,6 +459,13 @@ int main (int argc, char *argv[])
 	BLOCKATTR  = BLOCK_VIDEO;		/* A_BOLD */
 	CNTLATTR   = CONTROL_VIDEO;		/* A_UNDERLINE */
 
+	/* The status and ruler refreshes must not move the terminal
+	 * cursor (the flicker fix): leave it where the edit window
+	 * puts it. The prompt line is an editing surface and keeps
+	 * its cursor. */
+	leaveok (statuswin, TRUE);
+	leaveok (rulerwin, TRUE);
+
 	/* The status line is plain; the ruler below it is plain too */
 	wattrset (promptwin, PROMPTATTR);
 	keypad (editwin, TRUE);		/* Interpret extended keycodes */

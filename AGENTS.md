@@ -199,6 +199,23 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-23 — The status/ruler flicker removed (the slow-terminal
+  fix): display()'s tail did THREE wrefresh calls per keystroke
+  (the status line unconditionally, the ruler on change, the edit
+  window), and each wrefresh repositioned the terminal cursor -
+  on a slow machine the cursor visibly hopped status line -> ruler
+  -> text (the user's flicker report). The fix: leaveok(TRUE) on
+  the status and ruler windows (their refreshes never move the
+  terminal cursor; the prompt line keeps its cursor - it is an
+  editing surface), status_linecol() gained change tracking plus a
+  force flag (status_line() forces after status() erased the line -
+  otherwise the tracked skip would lose the L/C fragment), the
+  inner wrefresh calls became wnoutrefresh, and display()'s tail is
+  ONE wnoutrefresh(editwin) + doupdate() - a single physical update
+  per keystroke with the cursor placed by the edit window.
+  Measured: the identical editing session writes ~18% fewer
+  terminal output bytes; the editing results are byte-identical
+  (the differential vs master).
 - 2026-11-23 — The mingw-w64 Windows build adopted as the fourth
   gate: Makefile.mingw (the user's working draft, standardized to
   the house style - -O2, -Werror, the explicit ts.exe, the

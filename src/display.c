@@ -205,12 +205,42 @@ void stat_print (int col, char *st1, char *st2, char *st3)
  *     The label buffer holds files with 100000+ lines (sized
  *     accordingly - an older fixed-width version overflowed).
  * ####################################################################### */
-static void status_linecol (void)
+/* #######################################################################
+ * static void status_linecol (int force)
+ * purpose:
+ *     Refresh the "L n C n" fragment of the status line (at column
+ *     COLS - 49): the cursor line and column. Margin information
+ *     lives in the ruler's L/R marks instead.
+ * returns:
+ *     Nothing.
+ * parameters:
+ *     int force: 1 = redraw even when nothing changed (the caller
+ *     erased the status line); 0 = skip when the position is
+ *     unchanged (the flicker/performance fix).
+ * notes:
+ *     The label buffer holds files with 100000+ lines (sized
+ *     accordingly - an older fixed-width version overflowed). The
+ *     update is a wnoutrefresh: display() consolidates all windows
+ *     into one doupdate() so the physical cursor never hops to this
+ *     line (the flicker fix).
+ * ####################################################################### */
+static void status_linecol (int force)
 {
 	char label_pos[32];
+	static int last_x = -1;
+	static int last_y = -1;
+	static int last_cols = -1;
 
+	if (!force && txt_x == last_x && txt_y == last_y && COLS == last_cols)
+	{
+		return;
+	}
+	last_x = txt_x;
+	last_y = txt_y;
+	last_cols = COLS;
 	sprintf (label_pos, "L %-5d C %-5d", txt_x, txt_y);
-	stat_print (COLS - 49, label_pos, NULL, NULL);
+	mvwprintw (statuswin, 0, COLS - 49, "%s", label_pos);
+	wnoutrefresh (statuswin);
 }
 
 /* #######################################################################
@@ -283,7 +313,7 @@ void status_line (void)
 	status (0, "%s", nameptr, NULL);
 
 	/* Show cursor position */
-	status_linecol ();
+	status_linecol (1);		/* Forced: status() erased the line */
 
 	/* Show toggle status */
 	if (MRflag)
@@ -696,7 +726,7 @@ static void disp_page (int x_top, int x_bot)
 	{
 		line = dsp_line (line, i);
 	}
-	wrefresh (editwin);
+	wnoutrefresh (editwin);
 }
 /* #######################################################################
  * static void ruler_paint (void)
@@ -793,7 +823,7 @@ static void ruler_paint (void)
 		wmove (rulerwin, 0, txt_y - scr_ybeg);
 		waddch (rulerwin, (chtype) 'V');
 	}
-	wrefresh (rulerwin);
+	wnoutrefresh (rulerwin);
 }
 /* #######################################################################
  * void display (void)
@@ -897,7 +927,7 @@ void display (void)
 			}
 			dsp_line (p, txt_x - scr_xbeg + 1);
 		}
-		wrefresh (editwin);
+		wnoutrefresh (editwin);
 		break;
 
 	case dpage:					/* Display new page */
@@ -924,15 +954,18 @@ void display (void)
 	idlok (editwin, FALSE);		/* Disable hardware scrolling for help, etc.*/
 
 	/* update cursor position in status line */
-	status_linecol ();
+	status_linecol (0);
 
 	/* keep the tab ruler in sync (row 1) */
 	ruler_paint ();
 
 	/* Restore cursor */
 	wmove (editwin, txt_x - scr_xbeg, txt_y - scr_ybeg);
-	/* Needed for earlier curses implementations: */
-	wrefresh (editwin);
+	/* One physical update for all windows; the edit window is
+	 * refreshed last, so the terminal cursor ends in the text -
+	 * the status and ruler refreshes never move it (no flicker). */
+	wnoutrefresh (editwin);
+	doupdate ();
 }
 
 /* ================= HELP SCREEN DEFINITIONS & ROUTINES ================== */

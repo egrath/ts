@@ -1523,3 +1523,28 @@ the do_alloc sign-compare casts) and pushed. Docs: the AGENTS.md
 source map gained Makefile.mingw; the build section, the
 requirements, the flags line and the decisions entry were already
 current from the implementation round.
+
+== 2026-11-24 - Session 42: the status/ruler flicker removed (branch "flicker") ==
+
+The user's Raspberry Pi report: the terminal cursor flickered
+around the top bar (after L num C num) and the ruler on every key.
+Diagnosis: display()'s tail did three wrefresh calls per keystroke
+(the status unconditionally, the ruler on change, the edit window)
+and each repositioned the terminal cursor - the hop chain status ->
+ruler -> text was the flicker.
+
+Fix: leaveok(TRUE) on statuswin/rulerwin (the promptwin keeps its
+cursor - it is an editing surface); status_linecol() gained change
+tracking + a force flag (status_line() forces after status() erased
+the line - the tracked skip would otherwise lose the L/C fragment);
+the inner wrefreshes became wnoutrefresh; display()'s tail is ONE
+wnoutrefresh(editwin) + doupdate().
+
+Test notes: the differential run initially showed different editing
+results - the test loop forgot to reset the input file for the
+second binary; with identical inputs the editing results are
+byte-identical and the terminal output drops ~18% (1014 -> 831
+bytes for the same session).
+
+Verified: the replay grids unchanged, ASan clean, the four gates +
+the mingw rebuild + smoke 7/7. NOT merged - user tests on the Pi.

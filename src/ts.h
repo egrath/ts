@@ -45,6 +45,7 @@ extern int nodelay (WINDOW *, int);
 extern int noecho (void);
 extern int nonl (void);
 extern int overwrite (WINDOW *, WINDOW *);
+extern int leaveok (WINDOW *, bool);
 extern int raw (void);
 extern int touchwin (WINDOW *);
 extern int ungetch (int);
