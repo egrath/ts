@@ -1693,10 +1693,15 @@ void case_invert (void)
 /* #######################################################################
  * void del_word (void)
  * purpose:
- *     The ^T "delete word right" command: repeatedly del_right() up to
- *     the end of the word - stopping at a newline, sentence punctuation
- *     (. , :) or a space/tab boundary - then save the deleted range to
- *     the undo stack.
+ *     The ^T "delete word" command: delete the word to the right of
+ *     the cursor (stopping after a sentence punctuation . , :) plus
+ *     the whitespace following it, then save the deleted range to
+ *     the undo stack. The newline is a stop boundary and is never
+ *     deleted as part of the word - a word at the end of the line
+ *     leaves the line empty instead of joining the next line
+ *     (WordStar). When nothing was deleted and the newline is next
+ *     (an empty line, or the cursor at the line end), the newline
+ *     itself is deleted.
  * returns:
  *     Nothing.
  * parameters:
@@ -1713,14 +1718,23 @@ void del_word (void)
 	tmp_ptr = gap_end;
 	tmp_blkbeg = blk_beg;
 	tmp_blkend = blk_end;
-	while
-		(del_right () &&
-		(*(gap_end - 1) != '\n') &&
+	/* Delete the word - but the newline is a stop boundary and is
+	 * never deleted: a word at the end of the line leaves the line
+	 * empty instead of joining the next line (WordStar). */
+	while (*gap_end != '\n' && del_right () &&
 		(*(gap_end - 1) != '.') &&
 		(*(gap_end - 1) != ',') &&
 		(*(gap_end - 1) != ':') &&
 		((*(gap_end - 1) != ' ' && *(gap_end - 1) != '\t') ||
-		 (*gap_end == ' ' || *gap_end == '\t')));
+		 (*gap_end == ' ' || *gap_end == '\t')))
+		;
+	/* The nuance: when nothing was deleted and the newline is next
+	 * (an empty line, or the cursor at the line end), the newline
+	 * itself is deleted - verified on real WordStar. */
+	if (gap_end == tmp_ptr && *gap_end == '\n')
+	{
+		del_right ();
+	}
 	if (!undel_save (tmp_ptr, gap_end - tmp_ptr, FORWARD))
 	{
 		blk_beg = tmp_blkbeg;

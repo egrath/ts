@@ -191,6 +191,18 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-23 — ^T (delete word) never deletes the newline: the old
+  loop deleted the character first and checked afterwards, so a word
+  at the end of the line took the newline with it (the lines joined).
+  The newline is now a stop-BEFORE boundary (the loop tests the
+  character under the cursor) - a word at the line end leaves the
+  line empty instead of joining the next line (WordStar-verified by
+  the user, including the nuance: with the cursor directly before
+  the newline and nothing else to delete, ^T deletes the newline
+  itself - the empty-line/line-end removal; mid-line with text
+  following, ^T is a no-op). The word-plus-trailing-whitespace
+  behavior and the punctuation stops are unchanged. Docs:
+  reference.txt's ^T entry.
 - 2026-11-23 — The queue is deliberately empty: the left-margin
   feature is shelved - lt_marg and its machinery stay in place
   (compile-time fixed, the ruler's L mark live), the auto-indent

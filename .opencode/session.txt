@@ -1457,3 +1457,28 @@ each has a working mitigation, nothing reachable today). The
 decisions entry records it; the Known-issues and the code notes
 stay as honest status records (they describe the state, not
 promises). The queue is empty; nothing is planned.
+
+== 2026-11-24 - Session 41: ^T never deletes the newline (branch "delword") ==
+
+The user: ^T deletes the word + the following whitespace (proper,
+like WordStar) but also deletes the newline when the word is at the
+line end (WordStar does not). The nuance (verified on real WordStar
+by the user): with the cursor directly before the newline and
+nothing else to delete, ^T deletes the newline itself.
+
+Fix: del_word()'s loop tests the character under the cursor BEFORE
+deleting (*gap_end != '\n' as the first condition) - the newline is
+a stop-before boundary, never deleted as part of the word; the
+special case deletes the newline when nothing else was deleted.
+Mid-line with text following, ^T is a no-op. The word + trailing
+whitespace + punctuation stops unchanged.
+
+Test notes: the first matrix run used \004 (^D) instead of \024
+(^T) - all six tests wrong; re-run with the correct keys. The undo
+test's expected-bytes label had a typo - the actual result (the
+file restored to the original 12 bytes) is correct.
+
+Verified: the six-case matrix (the word at the line end, the ^T^T
+nuance, the mid-line, the space run, the punctuation stop), the
+undo round-trip, ASan clean, the four gates + smoke 7/7. NOT
+merged - user tests first.

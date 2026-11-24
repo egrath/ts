@@ -70,7 +70,10 @@ Backspace or Del
                 the marker joins the last line with the marker line -
                 the file then ends without a newline (the same as
                 typing text without a trailing RETURN)
-^T              Delete the word to the right (stops at punctuation)
+^T              Delete the word to the right (stops at punctuation).
+                The newline is never deleted: a word at the end of
+                the line leaves the line empty, and ^T on an empty
+                line deletes the newline itself
 ^Y              Delete the whole line the cursor is on
 ^U              Undo: restore the last deleted text. Repeat to go
                 further back. Deleted text is only forgotten when
