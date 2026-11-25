@@ -1,6 +1,5 @@
 #
-# Makefile for TextStar (binary "ts", formerly SUE)
-# Copyright 1992, Point to Point Communications, Inc.
+# Makefile for TextStar (binary "ts")
 #
 #--------------------- Compiler Flags ---------------------------
 CFLAGS = -O2 -std=c89 -Wpedantic -Wall -Werror
