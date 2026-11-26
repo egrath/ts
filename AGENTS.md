@@ -199,6 +199,25 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-26 — The Makefiles stop rebuilding unchanged sources: the
+  objects depended on the build DIRECTORY, whose mtime moves whenever
+  a file is created in it - that kept re-dating the objects, so
+  make recompiled stragglers on every run (the user's report,
+  observed on both the standard Makefile and Makefile.mingw;
+  Makefile.mingw additionally had "build" in .PHONY, making every
+  make rebuild all five objects outright). Verified with make -n
+  and the directory-vs-object mtime stat. Fix (the house-portable
+  choice, no GNU order-only prerequisites - ULTRIX-era GNU make
+  predates them): the objects depend only on sources and headers,
+  and each recipe creates the directory lazily (test -d || mkdir
+  -p, parallel-safe). "build" left .PHONY in Makefile.mingw; the
+  standalone build: rules stay as manual helpers. Makefile.wcc is
+  unaffected (wmake semantics; confirmed by the maintainer on
+  OpenWatcom). Supersedes the 2026-11-20 "build directory as a
+  prerequisite" dependency design. Verified: make twice = the
+  second zero compile lines; rm -rf build (and build.mingw) still
+  builds; touch src/ts.h rebuilds all five; smoke 7/7; gcc-16 and
+  the wcc gates green.
 - 2026-11-24 — The repaint scopes resized for the disabled hardware
   line-ops (the invisible-[EOF]-marker bug): the [EOF]-everywhere fix
   disabled the four winsertln/wdeleteln sites but left their repaint

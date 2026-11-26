@@ -1728,3 +1728,29 @@ fast-forwarded to master (6530b17..93a286b) and pushed. Master now
 carries the shift-free repaint scopes (the dinsln tail, the full-
 window scrolls), the decisions entry (runtime-verified, merged),
 and the session record. The queue stands empty.
+
+== 2026-11-26 - the Makefiles stop rebuilding unchanged sources (branch "makefix") ==
+
+The user's report: both Makefile and Makefile.mingw recompiled on
+every make with no source changes (Makefile.wcc confirmed clean by
+the maintainer on OpenWatcom).
+
+Root cause (verified with make -n + the mtime stat): the objects
+listed the build DIRECTORY as a prerequisite. A directory's mtime
+moves when a file is created inside it, so every compile re-dated
+the directory and the older objects were perpetually out of date -
+a self-sustaining cascade. Makefile.mingw was worse: "build" sat in
+.PHONY, so all five objects rebuilt unconditionally every time.
+
+Fix: the objects depend only on sources and headers; each recipe
+creates the directory lazily (test -d || mkdir -p, parallel-safe).
+"build" removed from Makefile.mingw's .PHONY. No GNU order-only
+prerequisites - ULTRIX-era GNU make predates them (the house
+no-GNU-isms rule). Makefile.wcc untouched (wmake semantics).
+
+Verified: make twice = the second prints zero compile lines; the
+fresh-checkout case (rm -rf build, rm -rf build.mingw) builds; the
+touch-src/ts.h case rebuilds all five objects (timestamp-granularity
+note: the first check ran inside the same clock second and read 0 -
+a 1-second sleep makes it deterministic); smoke 7/7; the gcc-16 and
+wcc gates green.

@@ -62,18 +62,29 @@ build	:
 	mkdir -p ${BUILDDIR}
 
 # Dependencies
+#
+# The objects depend only on sources and headers - NOT on the build
+# directory: a directory's mtime moves whenever a file is created in
+# it, which kept re-dating the objects and rebuilding them on every
+# make. The recipes create the directory lazily instead, so a fresh
+# checkout (no build dir) still builds.
 
-${BUILDDIR}/command.o : ${SRCDIR}/command.c ${SRCDIR}/ts.h build
+${BUILDDIR}/command.o : ${SRCDIR}/command.c ${SRCDIR}/ts.h
+	@test -d ${BUILDDIR} || mkdir -p ${BUILDDIR}
 	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
 
-${BUILDDIR}/data.o : ${SRCDIR}/data.c ${SRCDIR}/ts.h build
+${BUILDDIR}/data.o : ${SRCDIR}/data.c ${SRCDIR}/ts.h
+	@test -d ${BUILDDIR} || mkdir -p ${BUILDDIR}
 	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
 
-${BUILDDIR}/display.o : ${SRCDIR}/display.c ${SRCDIR}/ts.h build
+${BUILDDIR}/display.o : ${SRCDIR}/display.c ${SRCDIR}/ts.h
+	@test -d ${BUILDDIR} || mkdir -p ${BUILDDIR}
 	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
 
-${BUILDDIR}/funcs.o : ${SRCDIR}/funcs.c ${SRCDIR}/ts.h ${SRCDIR}/version.h build
+${BUILDDIR}/funcs.o : ${SRCDIR}/funcs.c ${SRCDIR}/ts.h ${SRCDIR}/version.h
+	@test -d ${BUILDDIR} || mkdir -p ${BUILDDIR}
 	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
 
-${BUILDDIR}/ts.o : ${SRCDIR}/ts.c ${SRCDIR}/ts.h ${SRCDIR}/version.h build
+${BUILDDIR}/ts.o : ${SRCDIR}/ts.c ${SRCDIR}/ts.h ${SRCDIR}/version.h
+	@test -d ${BUILDDIR} || mkdir -p ${BUILDDIR}
 	${CC} -c ${CFLAGS} ${EFLAGS} $< -o $@
