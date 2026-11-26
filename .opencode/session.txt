@@ -1754,3 +1754,11 @@ touch-src/ts.h case rebuilds all five objects (timestamp-granularity
 note: the first check ran inside the same clock second and read 0 -
 a 1-second sleep makes it deterministic); smoke 7/7; the gcc-16 and
 wcc gates green.
+
+== 2026-11-26 - makefix merged to master ==
+
+The user's pass: "looks good". The makefix branch fast-forwarded to
+master (93370ef..71d038c) and pushed. Master now carries the
+source/header-only object dependencies and the lazy mkdir in both
+Makefiles; the decisions entry records the supersession of the
+2026-11-20 directory-as-prerequisite design. The queue stands empty.
