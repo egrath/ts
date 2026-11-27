@@ -1792,3 +1792,12 @@ session: paste RETURN plain, ^N split, ^P BEL - the saved bytes
 byte-exact). reference.txt updated (^Q-V/^Q-P entries, the
 RETURN/paste note, the ^Q-V/Ins toggle wording). NOT merged - the
 user's platform pass is next.
+
+== 2026-11-27 - pmode merged to master ==
+
+The user's pass: "looks good". The pmode branch fast-forwarded to
+master (3e451dd..0e4a83b) and pushed. Master now carries: the
+paste_mode global, the split_line guards, the ^Q-P/^Q-V toggles,
+the INDENT/PASTE status field, the re-packed help screens, and the
+reference.txt entries. The decisions entry records the runtime
+verification and the merge. The queue stands empty.

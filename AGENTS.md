@@ -221,6 +221,7 @@ cursor clamps at the marker start and nothing can be written behind it.
   BEL regression) 10/10, smoke 7/7, the four gates, the ASan/UBSan
   pass. No bracketed paste (ESC[200~) by design - most current and
   future targets lack it; the manual toggle is period-faithful.
+  Runtime-verified by the maintainer; merged to master (0e4a83b).
 - 2026-11-26 — The Makefiles stop rebuilding unchanged sources: the
   objects depended on the build DIRECTORY, whose mtime moves whenever
   a file is created in it - that kept re-dating the objects, so
