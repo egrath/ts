@@ -199,6 +199,31 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-27 — Saving to a user-entered name confirms before
+  overwriting: ^K-S/^K-X/^K-D on a nameless buffer prompted for a
+  name and then silently clobbered an existing file (the user's
+  report). The distinction is HOW the name came to the editor: a
+  name_typed flag (set by name() - the ^K-N command and the save
+  prompt share it) asks "File exists; Overwrite (Y/N)?" when the
+  file exists; a loaded name (main()/edit_init, which resets the
+  flag) and a successfully SAVED name (the flag clears on success,
+  rule 3: "like if the user has loaded the file from the start")
+  save without asking. A FAILED save leaves the flag set, so the
+  next save still asks. The N answer saves nothing and KEEPS the
+  name (an earlier design cleared it, which would have undone a
+  deliberate ^K-N rename); name_typed stays set, so the next save
+  re-asks until Y or a load. The prompt mirrors abandon()'s
+  mechanics (the N\b default display, the echoed Y); the existence
+  test is stat() as in main() (writeblk()'s O/A/Q block-write
+  prompt is untouched - the user confirmed ^K-W already asks).
+  Verified: the 8-scenario grid (the N abort byte-unchanged, the Y
+  overwrite + the no-re-ask, the loaded-file pass-through, the
+  re-ask after N, ^K-X staying open on N, a fresh name silent, the
+  ^K-N scenario) 8/8, smoke 7/7, the four gates, ASan/UBSan clean.
+  Harness lessons: relative file names in the grid land in the
+  repo CWD (stray files - use absolute paths); the pty log is one
+  long line, so prompt occurrences count with grep -o | wc -l,
+  never grep -c.
 - 2026-11-27 — Paste mode (^Q-P) and the insert-mode toggle moved to
   ^Q-V: pasting preformatted text into the terminal accumulated
   indentation (every pasted RETURN ran split_line and carried the

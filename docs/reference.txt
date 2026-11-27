@@ -167,6 +167,13 @@ Files
 ^K N    Set or change the file name
 ^K X    Save and exit
 ^K Q    Quit WITHOUT saving (asks when modified)
+        Saving to a name you TYPED (at the save prompt, or set with
+        ^K N) asks "File exists; Overwrite (Y/N)?" when the file
+        already exists - N saves nothing and the name is kept (the
+        next save asks again). After a successful save the file is
+        this session's own: further saves go without asking, like a
+        loaded file. ^K W keeps its own O(verwrite)/A(ppend)/Q(uit)
+        prompt for block writes
 ^K F    Change the file mode: U = Unix (LF), D = MSDOS (CRLF),
         M = Macintosh (CR). New files get the platform's default
         mode; on the first load the mode is detected from the file

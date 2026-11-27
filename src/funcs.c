@@ -344,7 +344,10 @@ int del_right (void)
  * parameters:
  *     None; reads the response buffer, writes txtname.
  * notes:
- *     Refreshes the status line so the new name shows immediately.
+ *     Refreshes the status line so the name shows immediately. Sets
+ *     name_typed: a user-entered name asks for confirmation at save
+ *     time when the file exists (a loaded or already-saved name does
+ *     not - see save_fname()).
  * ####################################################################### */
 int name (void)
 {
@@ -355,6 +358,9 @@ int name (void)
 		((tokptr = strtok (respptr, " \t")) != NULLCHARPTR))
 	{
 		strcpy (txtname, tokptr);
+		name_typed = TRUE;	/* A user-entered name: the overwrite
+				 * query applies at save time until the
+				 * file is saved or reloaded */
 		status_line ();
 		return (1);
 	}
@@ -362,6 +368,36 @@ int name (void)
 	{
 		return (0);	/* Null response */
 	}
+}
+/* #######################################################################
+ * static char overwrite_query (void)
+ * purpose:
+ *     Ask whether an existing file may be overwritten (the whole-text
+ *     save to a user-entered name - ^K-S/^K-X/^K-D). Prompts "File
+ *     exists; Overwrite (Y/N)?", defaulting to N.
+ * returns:
+ *     'Y' when the user confirmed (uppercased), any other character
+ *     (typically N) otherwise.
+ * parameters:
+ *     None.
+ * notes:
+ *     Mirrors abandon()'s mechanics: the prompt pre-fills the N
+ *     default (N\b) and echoing the confirmed Y keeps the prompt
+ *     line honest. writeblk()'s O/A/Q prompt covers the block-write
+ *     case; this one covers the whole-text save. The existence test
+ *     itself is stat() in save_fname() (main() uses the same call;
+ *     writeblk() uses fopen-rb because it needs no size).
+ * ####################################################################### */
+static char overwrite_query (void)
+{
+	int	c;
+
+	c = toupper (prompt_key ("File exists; Overwrite (Y/N)? N\b"));
+	if (c == 'Y')
+	{
+		wechochar (promptwin, c);
+	}
+	return (c);
 }
 /* #######################################################################
  * int save_fname (void)
@@ -372,20 +408,40 @@ int name (void)
  *     markers afterwards - so all of save()'s line-ending logic is
  *     reused.
  * returns:
- *     1 when the file was written, 0 on failure (no name, I/O error).
+ *     1 when the file was written, 0 on failure (no name, I/O error,
+ *     the user declined the overwrite).
  * parameters:
  *     None.
+ * notes:
+ *     A user-entered name (typed at the prompt here, or set with
+ *     ^K-N) asks "Overwrite?" when the file exists; answering N
+ *     saves nothing and keeps the name (the next save asks again).
+ *     A successful save clears name_typed: from then on the file is
+ *     this session's own, like a loaded one - no further prompts.
+ *     A FAILED save leaves name_typed set, so the next save still
+ *     asks. The existence test is stat(), as in main().
  * ####################################################################### */
 int save_fname (void)
 {
 	int ioresult;
 	char *old_beg, *old_end;
+	struct stat filestat;
 
 	if (strlen (txtname) == 0)		/* Have filename? */
 	{
 		if (!name ())
 		{
 			return (0);	/* Must have name! */
+		}
+	}
+
+	/* A user-entered name must not clobber an existing file
+	 * without asking: */
+	if (name_typed && stat (txtname, &filestat) != -1)
+	{
+		if (overwrite_query () != 'Y')
+		{
+			return (0);	/* N: nothing saved, the name kept */
 		}
 	}
 
@@ -416,6 +472,11 @@ int save_fname (void)
 
 	blk_beg = old_beg;				/* Restore block pointers */
 	blk_end = old_end;
+
+	if (ioresult)
+	{
+		name_typed = FALSE;	/* The save establishes the file */
+	}
 
 	return ioresult;
 }

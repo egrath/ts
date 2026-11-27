@@ -25,6 +25,7 @@ int	tabdef = TABDEF;			/* Default tab spacing (^OT) */
 
 char	insflag = TRUE;			/* INSert toggle */
 char	paste_mode = FALSE;		/* Paste mode: auto-indent off */
+char	name_typed = FALSE;		/* File name entered by user, unsaved */
 char	MRflag	= FALSE;		/* Margin Release toggle */
 char	cntlflag = FALSE;		/* Control char. display toggle */
 char	repflag = FALSE;		/* Replace flag for ^L */
@@ -238,6 +239,7 @@ void edit_init (char *v_name)
 	int j;				/* load()'s return */
 
 	mod = FALSE;
+	name_typed = FALSE;		/* A load (or no file) establishes the name */
 	undo_clear ();			/* Free buffers and set pointer to NULL */
 	blk_beg = blk_end = NULL;
 

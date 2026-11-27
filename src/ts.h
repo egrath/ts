@@ -205,6 +205,7 @@ extern	char	*bufptr;		/* General purpose pointer */
 
 extern	char	insflag;		/* INSert mode flag */
 extern	char	paste_mode;		/* Paste mode: auto-indent off */
+extern	char	name_typed;		/* File name entered by user, unsaved */
 extern	char	MRflag;			/* Margin Release flag */
 extern	char	cntlflag;		/* Control char. display on/off */
 

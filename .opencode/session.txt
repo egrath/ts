@@ -1801,3 +1801,35 @@ paste_mode global, the split_line guards, the ^Q-P/^Q-V toggles,
 the INDENT/PASTE status field, the re-packed help screens, and the
 reference.txt entries. The decisions entry records the runtime
 verification and the merge. The queue stands empty.
+
+== 2026-11-27 - the overwrite confirmation for user-entered names (branch "ovwchk") ==
+
+The user's report: ^K-S/^K-X with no file loaded prompts for a name
+and then silently overwrites an existing file. The design
+discussion established the distinction: a name TYPED by the user
+(the save-time prompt or ^K-N - one shared name() function) asks
+"File exists; Overwrite (Y/N)?" when the target exists; a loaded
+or already-saved name is the session's own and saves silently.
+The user also corrected me: ^K-W ALREADY has the O/A/Q check
+(writeblk, fopen-rb + prompt_key) - untouched.
+
+Implementation: the name_typed flag (set by name(), cleared by a
+successful save in save_fname and by edit_init); the static
+overwrite_query() mirroring abandon() (the N\b default, the echoed
+Y); the check in save_fname before the save; the N answer keeps
+the name (an earlier clears-the-name design would have undone a
+deliberate ^K-N rename) and re-asks on the next save.
+
+Harness lessons (both bit me this round): relative file names in
+the grid land in the REPO CWD (the strays target.txt/w7.txt -
+cleaned; absolute paths only from now on) and the pty log is one
+long line - prompt occurrence counts need grep -o | wc -l, never
+grep -c (the W5 "one prompt" was two prompts on one line).
+
+Verified: the 8-scenario grid 8/8 (N aborts byte-unchanged, Y
+overwrites + no re-ask, the loaded pass-through, the re-ask,
+^K-X stays open on N, a fresh name silent, the ^K-N scenario),
+smoke 7/7, the four gates, ASan/UBSan clean (the first ASan
+scenario put the toggles INTO the name prompt - redesigned).
+reference.txt's Files section updated. NOT merged - the user's
+platform pass is next.
