@@ -223,7 +223,8 @@ cursor clamps at the marker start and nothing can be written behind it.
   Harness lessons: relative file names in the grid land in the
   repo CWD (stray files - use absolute paths); the pty log is one
   long line, so prompt occurrences count with grep -o | wc -l,
-  never grep -c.
+  never grep -c. Runtime-verified by the maintainer; merged to
+  master (730aa18).
 - 2026-11-27 — Paste mode (^Q-P) and the insert-mode toggle moved to
   ^Q-V: pasting preformatted text into the terminal accumulated
   indentation (every pasted RETURN ran split_line and carried the

@@ -1833,3 +1833,12 @@ smoke 7/7, the four gates, ASan/UBSan clean (the first ASan
 scenario put the toggles INTO the name prompt - redesigned).
 reference.txt's Files section updated. NOT merged - the user's
 platform pass is next.
+
+== 2026-11-27 - ovwchk merged to master ==
+
+The user's pass: "works". The ovwchk branch fast-forwarded to
+master (3e59e8d..730aa18) and pushed. Master now carries the
+name_typed flag, the overwrite_query prompt, the save_fname check,
+and the reference.txt Files-section entry. The decisions entry
+records the runtime verification and the merge. The queue stands
+empty.
