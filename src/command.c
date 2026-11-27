@@ -430,7 +430,8 @@ static void alarm_onscr_hlp (int sig)
  * purpose:
  *     The ^Q "quick" command menu: wait for the second key and
  *     dispatch - file top/bottom, find/replace, line start/end, goto
- *     line, delete to end of line. Two-key command: main() prints the
+ *     line, delete to end of line, the paste-mode and insert-mode
+ *     toggles. Two-key command: main() prints the
  *     "^Q-" prompt before calling this.
  * returns:
  *     Nothing; the executed command updates the cursor/screen state.

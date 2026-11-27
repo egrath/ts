@@ -192,20 +192,6 @@ void stat_print (int col, char *st1, char *st2, char *st3)
 }
 
 /* #######################################################################
- * static void status_linecol (void)
- * purpose:
- *     Refresh the "L n C n" fragment of the status line (at column
- *     COLS - 49): the cursor line and column. Margin information
- *     lives in the ruler's L/R marks instead.
- * returns:
- *     Nothing.
- * parameters:
- *     None; reads txt_x/txt_y.
- * notes:
- *     The label buffer holds files with 100000+ lines (sized
- *     accordingly - an older fixed-width version overflowed).
- * ####################################################################### */
-/* #######################################################################
  * static void status_linecol (int force)
  * purpose:
  *     Refresh the "L n C n" fragment of the status line (at column
@@ -841,8 +827,11 @@ static void ruler_paint (void)
  *     the cursor left the visible rows/columns, possibly downgrading
  *     a full repaint to a one-line scroll. Then performs the cheapest
  *     repaint that satisfies the request: single line, end-of-line,
- *     line insert/delete with curses hardware support, scroll, or full
- *     page. Ends by updating the status line and restoring the cursor.
+ *     line insert/delete, scroll, or full page. The curses hardware
+ *     line-ops are disabled (they desync the display at the marker
+ *     boundary - the decisions log), so the insert/delete and scroll
+ *     modes repaint the affected rows instead. Ends by updating the
+ *     status line and restoring the cursor.
  * returns:
  *     Nothing.
  * parameters:
@@ -852,7 +841,9 @@ static void ruler_paint (void)
  *     The disp_mode enum is ORDINAL on purpose: "disp_mode > dtoeol"
  *     means "this command changed enough state to need the hard-CR
  *     flags repainted". Hardware scrolling (idlok) is enabled for the
- *     scroll modes and disabled for full pages - an old curses bug.
+ *     incremental modes and disabled for full pages - an old curses
+ *     bug; ncurses' doupdate scroll optimization may still hardware-
+ *     scroll an incremental diff.
  * ####################################################################### */
 void display (void)
 {

@@ -136,7 +136,11 @@ cursor clamps at the marker start and nothing can be written behind it.
 - **Strict C89, no GNU extensions.** Function definitions in prototype form;
   all declarations at the top of a block.
 - Single-file helpers are `static` and kept out of `ts.h` (currently:
-  `test`, `dsp_line`, `disp_page`, `status_linecol`, `do_alloc`).
+  `test`, `count_lf`, `jumpmark_fwd`, `jumpmark_bwd`, `dsp_line`,
+  `disp_page`, `status_linecol`, `ruler_paint`, `help_line`,
+  `overwrite_query`, `blk_clamp`, `shell_escape`, `do_alloc` - and
+  the `alarm_*_hlp` trampolines, covered by their own rule below;
+  new static helpers belong in this list).
 - Format-string helpers: `stat_print` and `status` have fixed argument lists
   (call sites pass `NULL` for unused trailing args); `xw_printw` and `prompt`
   are variadic (`...` + `<stdarg.h>`, C89-standard) because several call sites

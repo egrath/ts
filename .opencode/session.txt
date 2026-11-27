@@ -1842,3 +1842,30 @@ name_typed flag, the overwrite_query prompt, the save_fname check,
 and the reference.txt Files-section entry. The decisions entry
 records the runtime verification and the merge. The queue stands
 empty.
+
+== 2026-11-27 - the documentation audit ==
+
+The user asked for a full documentation check. The audit confirmed
+the decisions log (all seven rounds, each with the verification +
+merge record), the Known-issues list (the nine ULTRIX prototypes),
+the Build section, the source map, reference.txt's ^V/paste/
+overwrite entries, and the session record - all current.
+
+Six gaps found and fixed:
+1. AGENTS.md's static-helpers list named 5 of the 13 actual static
+   helpers (count_lf/jumpmark_*/ruler_paint/help_line/blk_clamp/
+   shell_escape/overwrite_query were missing from their rounds) -
+   brought current, with "new static helpers belong in this list".
+2. reference.txt's top-bar description lacked the INDENT/PASTE
+   mode indicator.
+3. q_key()'s purpose list lacked the paste/insert toggles.
+4. display()'s purpose still claimed "line insert/delete with
+   curses hardware support" - stale since the line-op disable;
+   reworded + the idlok note generalized to "the incremental
+   modes" (ncurses' doupdate scroll-opt noted).
+5. line_y()'s purpose now describes the boundary branch's honest
+   column (column(txt_end)) from the ^Q round.
+6. The orphaned force-less status_linecol doc block (the flicker
+   round's leftover) deleted.
+
+Docs-only commit on master; smoke 7/7 after the rebuild.

@@ -384,7 +384,11 @@ int text_move (void)
  *     from the nearer end, counting TABs to their tab stops and
  *     skipping over a TAB that would land mid-stop. Stops at the end
  *     of the line and - crucially - at txt_end, so the cursor can
- *     never walk behind the [EOF] marker.
+ *     never walk behind the [EOF] marker. When the gap already sits
+ *     at txt_end (the marker start), the boundary branch returns the
+ *     honest column of that position - column(txt_end), the one
+ *     after the last text character (the pre-inline-marker model
+ *     returned 1, which desynced the rendered cursor from the gap).
  * returns:
  *     The column actually reached (may be less than requested at a
  *     TAB or the line end).
