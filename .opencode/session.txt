@@ -1762,3 +1762,33 @@ master (93370ef..71d038c) and pushed. Master now carries the
 source/header-only object dependencies and the lazy mkdir in both
 Makefiles; the decisions entry records the supersession of the
 2026-11-20 directory-as-prerequisite design. The queue stands empty.
+
+== 2026-11-27 - paste mode (^Q-P) + ^Q-V (branch "pmode") ==
+
+The user's design (refined through discussion): pasting preformatted
+text accumulated indentation because every pasted RETURN ran
+split_line's auto-indent. ^P enter code STAYS (the user learned
+what it does and wants it); the paste toggle went to ^Q-P and the
+insert-mode toggle to ^Q-V (both in the ^Q menu, one meaning per
+key; bare ^V now unknown, the Ins key aliases stay). split_line
+guards the indent copy and the after-cursor trim on !paste_mode -
+the trim skip matters for a mid-run paste. The status line gained
+the INDENT/PASTE field (right-aligned before INS/OVR, inside the
+flicker-round tracking so toggles repaint). The help screens
+re-packed per the user's sketches; widths matched to the originals
+(CP2 needed +3 pad, CQ3-5 one space over - caught by a
+define-width diff against HEAD).
+
+Harness notes: the grid's first run "failed" on my wrong byte
+expectations (the typed 'x', the warning-ack eating the first
+space - the known gotcha) and a wrong ^N encoding (^N is the direct
+key 0x0E, NOT ^Q-n - ^Q-n hits q_key's unknown-key prompt which
+swallows the queued save keys). Fixed expectations: 10/10.
+
+Verified: the grid 10/10, the help strings in the raw log
+("enter code", "MODE", "paste mode", "insert mode" all render),
+smoke 7/7, gcc-16 + wcc + mingw green, ASan/UBSan clean (the mixed
+session: paste RETURN plain, ^N split, ^P BEL - the saved bytes
+byte-exact). reference.txt updated (^Q-V/^Q-P entries, the
+RETURN/paste note, the ^Q-V/Ins toggle wording). NOT merged - the
+user's platform pass is next.

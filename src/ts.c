@@ -24,6 +24,7 @@ int	repkey;						/* Response to Replace query */
 int	tabdef = TABDEF;			/* Default tab spacing (^OT) */
 
 char	insflag = TRUE;			/* INSert toggle */
+char	paste_mode = FALSE;		/* Paste mode: auto-indent off */
 char	MRflag	= FALSE;		/* Margin Release toggle */
 char	cntlflag = FALSE;		/* Control char. display toggle */
 char	repflag = FALSE;		/* Replace flag for ^L */

@@ -209,8 +209,10 @@ void stat_print (int col, char *st1, char *st2, char *st3)
  * static void status_linecol (int force)
  * purpose:
  *     Refresh the "L n C n" fragment of the status line (at column
- *     COLS - 49): the cursor line and column. Margin information
- *     lives in the ruler's L/R marks instead.
+ *     COLS - 49): the cursor line and column, followed by the mode
+ *     indicator (INDENT or PASTE, right-aligned in an 8-column
+ *     field; ^Q-P toggles). Margin information lives in the ruler's
+ *     L/R marks instead.
  * returns:
  *     Nothing.
  * parameters:
@@ -220,9 +222,10 @@ void stat_print (int col, char *st1, char *st2, char *st3)
  * notes:
  *     The label buffer holds files with 100000+ lines (sized
  *     accordingly - an older fixed-width version overflowed). The
- *     update is a wnoutrefresh: display() consolidates all windows
- *     into one doupdate() so the physical cursor never hops to this
- *     line (the flicker fix).
+ *     mode is part of the tracked state, so a ^Q-P toggle repaints
+ *     the fragment. The update is a wnoutrefresh: display()
+ *     consolidates all windows into one doupdate() so the physical
+ *     cursor never hops to this line (the flicker fix).
  * ####################################################################### */
 static void status_linecol (int force)
 {
@@ -230,15 +233,19 @@ static void status_linecol (int force)
 	static int last_x = -1;
 	static int last_y = -1;
 	static int last_cols = -1;
+	static int last_paste = -1;
 
-	if (!force && txt_x == last_x && txt_y == last_y && COLS == last_cols)
+	if (!force && txt_x == last_x && txt_y == last_y
+		&& COLS == last_cols && paste_mode == last_paste)
 	{
 		return;
 	}
 	last_x = txt_x;
 	last_y = txt_y;
 	last_cols = COLS;
-	sprintf (label_pos, "L %-5d C %-5d", txt_x, txt_y);
+	last_paste = paste_mode;
+	sprintf (label_pos, "L %-5d C %-5d%s", txt_x, txt_y,
+		paste_mode ? "   PASTE" : "  INDENT");
 	mvwprintw (statuswin, 0, COLS - 49, "%s", label_pos);
 	wnoutrefresh (statuswin);
 }
@@ -990,8 +997,8 @@ void display (void)
 
 /* Primary help screen */
 #define CP0 " CURSOR MOVEMENT    SCROLLING      DELETING           OTHER COMMANDS          "
-#define CP1 "   `^E`    `^F`=word   `^W`=back       `Del`,`Backspace`   `^U`=undo        `^V`=insert     "
-#define CP2 " `^S`  `^D`     right  `^Z`=forward      =char left    `^N`=insert line `^P`=enter code "
+#define CP1 "   `^E`    `^F`=word   `^W`=back       `Del`,`Backspace`   `^U`=undo        `^P`=enter code "
+#define CP2 " `^S`  `^D`     right  `^Z`=forward      =char left    `^N`=insert line                 "
 #define CP3 "   `^X`    `^A`=word   `^R`=page back  `^G`=char right   `^L`=find or replace next      "
 #define CP4 "or `arrow`    left   `^C`=page fwd   `^T`=word right   `^B`=reform paragraph          "
 #define CP5 "  `keys`                           `^Y`=whole line   `^^`=change case               "
@@ -1001,9 +1008,9 @@ void display (void)
 #define CQ0 "     QUICK MOVEMENT            SEARCHING                 DELETING             "
 #define CQ1 " `^Q-R`=go to top of file        `^Q-F`=find         `^Q-Y`=erase to end of line    "
 #define CQ2 " `^Q-C`=go to end of file        `^Q-A`=replace                                   "
-#define CQ3 " `^Q-S`=go to start of line                                                     "
-#define CQ4 " `^Q-D`=go to end of line                                                       "
-#define CQ5 " `^Q-I`=go to line number                                                       "
+#define CQ3 " `^Q-S`=go to start of line      MODE                                           "
+#define CQ4 " `^Q-D`=go to end of line        `^Q-V`=insert mode                             "
+#define CQ5 " `^Q-I`=go to line number        `^Q-P`=paste mode                              "
 #define CQ6 "                                                                                "
 
 /* Block help screen */

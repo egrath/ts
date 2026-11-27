@@ -199,6 +199,28 @@ cursor clamps at the marker start and nothing can be written behind it.
 
 ## Decisions log
 
+- 2026-11-27 — Paste mode (^Q-P) and the insert-mode toggle moved to
+  ^Q-V: pasting preformatted text into the terminal accumulated
+  indentation (every pasted RETURN ran split_line and carried the
+  previous line's indent - the user's "line 1 fits, line 3 shifts"
+  report). The user's design: ^P KEEPS enter code (the control-code
+  insertion - "may come handy"; ^O-D/cntlflag's display layer
+  untouched), the paste toggle joins the ^Q menu. paste_mode global
+  (default INDENT); split_line guards the indent copy AND the
+  after-cursor trim (the remainder keeps its whitespace - the trim
+  skip is the part that would have re-mangled a mid-run paste). The
+  status line shows INDENT/PASTE right-aligned in an 8-column field
+  before INS/OVR (the INS column unmoved), as part of the
+  flicker-round change tracking so a toggle repaints. ^V moved from
+  key_scan to q_key (bare ^V now unknown - one meaning per key; the
+  Ins key aliases stay); the help screens re-packed (^P=enter code
+  next to ^U=undo in the ^J screen, the ^Q screen gains the MODE
+  subsection with ^Q-V/^Q-P, widths matched to the originals).
+  Verified: the 10-scenario grid (the toggles and status strings,
+  the indent carry/plain for RETURN and ^N in both modes, the ^P
+  BEL regression) 10/10, smoke 7/7, the four gates, the ASan/UBSan
+  pass. No bracketed paste (ESC[200~) by design - most current and
+  future targets lack it; the manual toggle is period-faithful.
 - 2026-11-26 — The Makefiles stop rebuilding unchanged sources: the
   objects depended on the build DIRECTORY, whose mtime moves whenever
   a file is created in it - that kept re-dating the objects, so

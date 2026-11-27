@@ -204,6 +204,7 @@ extern	char	respsiz;		/* size of same */
 extern	char	*bufptr;		/* General purpose pointer */
 
 extern	char	insflag;		/* INSert mode flag */
+extern	char	paste_mode;		/* Paste mode: auto-indent off */
 extern	char	MRflag;			/* Margin Release flag */
 extern	char	cntlflag;		/* Control char. display on/off */
 

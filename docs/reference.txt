@@ -60,6 +60,9 @@ Quick menu (^Q)
 ^Q C or PgDn   Cursor to the end of the file (last line, last column)
 ^Q I           Go to a line number (prompted); cursor to column 1
 ^Q Y           Delete to the end of the line
+^Q V           Insert mode on/off (the status line shows INS/OVR)
+^Q P           Paste mode on/off (the status line shows INDENT/PASTE):
+               the auto-indent is off, for pasting preformatted text
 
 Deletion and undo
 -----------------
@@ -82,11 +85,13 @@ Backspace or Del
 Text entry
 ----------
 Just type       Characters are inserted at the cursor (or overwrite when
-                insert mode is off, ^V toggles it)
+                insert mode is off; ^Q-V or the Ins key toggles it)
 RETURN          Newline. Auto-indent: the new line starts at the same
                 column as the current one - its leading spaces/tabs are
                 carried over (byte-exact); inside the indentation, the
-                remainder is not duplicated
+                remainder is not duplicated. Paste mode (^Q-P) turns
+                the auto-indent off, so pasted preformatted text keeps
+                its own indentation
 ^N              Line break at the cursor: the text after the cursor
                 moves to a new line, auto-indented like with RETURN;
                 the cursor stays at the split point (the end of the

@@ -1796,6 +1796,9 @@ void del_line (void)
  *     the cursor sits inside the run, the after-cursor remainder is
  *     trimmed so the new line starts at exactly the old line's
  *     column. Used by RETURN (key_scan) and ^N (insert_newline).
+ *     Paste mode (^Q-P) turns the auto-indent off: the split is
+ *     plain and any after-cursor whitespace stays on the new line -
+ *     pasted text keeps its own indentation.
  * returns:
  *     1 when the split was done; 0 when the gap had no room for
  *     newline + indent (tpa_err()'d, nothing changed).
@@ -1834,6 +1837,15 @@ int split_line (int keep_cursor)
 		}
 	}
 
+	/* Paste mode: no auto-indent - the pasted text's own leading
+	 * whitespace must land unchanged (RETURN and ^N both split
+	 * here): the indent copies nothing and the after-cursor run
+	 * stays on the new line, untrimmed. */
+	if (paste_mode)
+	{
+		indent = 0;
+	}
+
 	/* Newline plus indent in one all-or-nothing space check - no
 	 * half-inserted split. */
 	if (gap_beg + indent + 1 >= gap_end)
@@ -1866,10 +1878,14 @@ int split_line (int keep_cursor)
 	/* Trim the whitespace the after-cursor text still carries (the
 	 * rest of the run, already in the indent): the new line starts
 	 * at exactly the old line's column. Bounded by the scan end -
-	 * trailing blanks on ordinary lines are never touched. */
-	while (gap_end < p && (*gap_end == ' ' || *gap_end == '\t'))
+	 * trailing blanks on ordinary lines are never touched. Paste
+	 * mode skips the trim: the remainder keeps its whitespace. */
+	if (!paste_mode)
 	{
-		gap_end++;
+		while (gap_end < p && (*gap_end == ' ' || *gap_end == '\t'))
+		{
+			gap_end++;
+		}
 	}
 
 	txt_x++;

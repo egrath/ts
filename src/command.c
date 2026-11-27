@@ -266,8 +266,7 @@ void key_scan (void)
 
 	/* --------- TOGGLES --------- */
 
-	case CNTRL_V:				/* INSert on/off */
-	case KEY_IC:
+	case KEY_IC:				/* INSert on/off */
 	case KEY_EIC:
 		insflag = !insflag;
 		if (insflag)
@@ -514,6 +513,22 @@ void q_key (void)
 
 	case CNTRL_I:			/* Seek line # */
 		goto_line ();
+		break;
+
+	case CNTRL_V:			/* INSert on/off (moved from ^V) */
+		insflag = !insflag;
+		if (insflag)
+		{
+			stat_print (COLS - 24, "INS", NULL, NULL);
+		}
+		else
+		{
+			stat_print (COLS - 24, "OVR", NULL, NULL);
+		}
+		break;
+
+	case CNTRL_P:			/* Paste mode on/off (auto-indent) */
+		paste_mode = !paste_mode;
 		break;
 
 	case CNTRL_Y:			/* Delete to end of line */
